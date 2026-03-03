@@ -5,6 +5,7 @@
 *.iml
 *.iws
 *.ipr
+*.md
 
 # VS Code
 .vscode/

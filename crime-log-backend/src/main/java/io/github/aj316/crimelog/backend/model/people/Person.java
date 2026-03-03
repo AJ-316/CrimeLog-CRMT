@@ -1,6 +1,9 @@
-package io.github.aj316.crimelog.backend.model;
+package io.github.aj316.crimelog.backend.model.people;
 
+import io.github.aj316.crimelog.backend.model.Address;
+import io.github.aj316.crimelog.backend.model.types.Gender;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,6 +47,7 @@ public class Person {
     private String nationalityCode; // ISO 3166-1 alpha-2 country code
 
     @Embedded
+    @Valid
     @AttributeOverrides({
             @AttributeOverride(name = "street",         column = @Column(name = "birth_street")),
             @AttributeOverride(name = "city",           column = @Column(name = "birth_city")),
@@ -54,6 +58,7 @@ public class Person {
     private Address birthPlace;
 
     @Embedded
+    @Valid
     @AttributeOverrides({
             @AttributeOverride(name = "street",         column = @Column(name = "permanent_address_street")),
             @AttributeOverride(name = "city",           column = @Column(name = "permanent_address_city")),
@@ -64,6 +69,7 @@ public class Person {
     private Address permanentAddress;
 
     @Embedded
+    @Valid
     @AttributeOverrides({
             @AttributeOverride(name = "street",         column = @Column(name = "current_address_street")),
             @AttributeOverride(name = "city",           column = @Column(name = "current_address_city")),

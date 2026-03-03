@@ -1,6 +1,6 @@
 package io.github.aj316.crimelog.backend.exception;
 
-public class PersonAlreadyExistsException extends AlreadyExists {
+public class PersonAlreadyExistsException extends AlreadyExistsException {
     public PersonAlreadyExistsException(String person, String field) {
         super("Person", person, field);
     }

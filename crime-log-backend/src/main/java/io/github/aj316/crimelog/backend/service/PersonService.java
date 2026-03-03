@@ -1,9 +1,8 @@
 package io.github.aj316.crimelog.backend.service;
 
-import io.github.aj316.crimelog.backend.dto.ApiResponse;
 import io.github.aj316.crimelog.backend.dto.PersonDto;
 import io.github.aj316.crimelog.backend.exception.PersonAlreadyExistsException;
-import io.github.aj316.crimelog.backend.model.Person;
+import io.github.aj316.crimelog.backend.model.people.Person;
 import io.github.aj316.crimelog.backend.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 

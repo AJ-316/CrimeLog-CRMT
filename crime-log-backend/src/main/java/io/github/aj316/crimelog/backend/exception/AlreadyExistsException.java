@@ -1,19 +1,19 @@
 package io.github.aj316.crimelog.backend.exception;
 
-public class AlreadyExists extends RuntimeException {
-    public AlreadyExists(String entity, String value, String field) {
+public class AlreadyExistsException extends RuntimeException {
+    public AlreadyExistsException(String entity, String value, String field) {
         super(entity + " " + value + " with " + field + " already exists");
     }
 
-    public AlreadyExists(String entity, String value) {
+    public AlreadyExistsException(String entity, String value) {
         super(entity + " " + value + " already exists");
     }
 
-    public AlreadyExists(String entity) {
+    public AlreadyExistsException(String entity) {
         super(entity + " already exists");
     }
 
-    public AlreadyExists() {
+    public AlreadyExistsException() {
         super("Entity already exists");
     }
 }

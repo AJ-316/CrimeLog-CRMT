@@ -1,4 +1,4 @@
-package io.github.aj316.crimelog.backend.model;
+package io.github.aj316.crimelog.backend.model.types;
 
 public enum Role {
     ADMIN,

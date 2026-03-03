@@ -7,6 +7,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.NoSuchElementException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -17,10 +19,24 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("Invalid email or password: " + ex.getMessage()));
     }
 
-    @ExceptionHandler(AlreadyExists.class)
-    public ResponseEntity<ApiResponse<String>> handleAlreadyExistsException(AlreadyExists ex) {
+    @ExceptionHandler(AlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<String>> handleAlreadyExistsException(AlreadyExistsException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ApiResponse<String>> handleNoSuchElementException(NoSuchElementException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
                 .body(ApiResponse.failure(ex.getMessage()));
     }
 
