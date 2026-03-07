@@ -22,7 +22,7 @@ public class DepartmentUnit {
     private Long id;
 
     @ValidUnitCode
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String unitCode;
 
     @ManyToOne(optional = false)
@@ -33,8 +33,8 @@ public class DepartmentUnit {
     @Column(nullable = false)
     private UnitType unitType;
 
-    @Column(nullable = false)
-    private Boolean isPhysicalLocation;
+    @Column(nullable = false, length = 150)
+    private String name;
 
     @Embedded
     @Valid

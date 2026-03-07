@@ -16,7 +16,7 @@ public class AddressIfPhysicalValidator implements ConstraintValidator<ValidAddr
             return true;
         }
         
-        if (Boolean.TRUE.equals(departmentUnit.getIsPhysicalLocation())) {
+        if (departmentUnit.getUnitType().isPhysicalLocation()) {
             return departmentUnit.getAddress() != null;
         }
         

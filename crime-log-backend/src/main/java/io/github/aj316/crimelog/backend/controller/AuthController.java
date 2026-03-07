@@ -1,6 +1,10 @@
 package io.github.aj316.crimelog.backend.controller;
 
 import io.github.aj316.crimelog.backend.dto.*;
+import io.github.aj316.crimelog.backend.dto.auth.LoginRequest;
+import io.github.aj316.crimelog.backend.dto.auth.RegisterLawyerRequest;
+import io.github.aj316.crimelog.backend.dto.auth.RegisterOfficerRequest;
+import io.github.aj316.crimelog.backend.dto.auth.RegisterUserRequest;
 import io.github.aj316.crimelog.backend.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +20,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<TokenDto>> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authService.login(request), "Login successful"));
     }
 
@@ -39,5 +43,4 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> registerOfficer(@RequestBody RegisterOfficerRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authService.register(request) + " Registered", "Officer added successfully"));
     }
-
 }

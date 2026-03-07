@@ -1,22 +1,23 @@
 package io.github.aj316.crimelog.backend.service;
 
-import io.github.aj316.crimelog.backend.dto.*;
+import io.github.aj316.crimelog.backend.dto.TokenDto;
+import io.github.aj316.crimelog.backend.dto.auth.LoginRequest;
+import io.github.aj316.crimelog.backend.dto.auth.RegisterLawyerRequest;
+import io.github.aj316.crimelog.backend.dto.auth.RegisterOfficerRequest;
+import io.github.aj316.crimelog.backend.dto.auth.RegisterRequestDto;
 import io.github.aj316.crimelog.backend.model.people.Person;
-import io.github.aj316.crimelog.backend.model.people.users.LawyerProfile;
-import io.github.aj316.crimelog.backend.model.people.users.OfficerProfile;
 import io.github.aj316.crimelog.backend.model.people.users.User;
 import io.github.aj316.crimelog.backend.model.types.*;
 import io.github.aj316.crimelog.backend.service.jwt.JwtService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Email;
-import org.jspecify.annotations.NonNull;
+import org.apache.coyote.BadRequestException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
 
 @Service
 public class AuthService {
@@ -38,14 +39,17 @@ public class AuthService {
         this.lawyerService = lawyerService;
     }
 
-    public String login(LoginRequest request) {
+    public TokenDto login(LoginRequest request) {
+        if(!userService.existsByEmail(request.email())) {
+            throw new BadCredentialsException("Email");
+        }
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        return jwtService.generateToken(userDetails.getUsername());
+        return new TokenDto(jwtService.generateToken(userDetails.getUsername()));
     }
 
     @Transactional

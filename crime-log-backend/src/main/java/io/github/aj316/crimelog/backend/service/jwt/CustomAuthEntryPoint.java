@@ -35,7 +35,7 @@ public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
         String message = "Authentication failed";
 
         if (authException instanceof DisabledException) {
-            message = "Account not approved yet";
+            message = "Account not approved yet. Wait for admin to approve your account.";
         } else if (authException instanceof LockedException) {
             message = "Account suspended";
         }

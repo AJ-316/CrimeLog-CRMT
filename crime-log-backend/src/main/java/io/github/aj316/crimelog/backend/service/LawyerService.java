@@ -1,6 +1,6 @@
 package io.github.aj316.crimelog.backend.service;
 
-import io.github.aj316.crimelog.backend.dto.RegisterLawyerRequest;
+import io.github.aj316.crimelog.backend.dto.auth.RegisterLawyerRequest;
 import io.github.aj316.crimelog.backend.model.people.users.*;
 import io.github.aj316.crimelog.backend.repository.LawyerProfileRepository;
 import io.github.aj316.crimelog.backend.repository.UserRepository;

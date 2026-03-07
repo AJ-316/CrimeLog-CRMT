@@ -2,6 +2,7 @@ package io.github.aj316.crimelog.backend.model.people.users;
 
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.types.ActiveStatus;
+import io.github.aj316.crimelog.backend.model.types.UnitRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,16 +23,17 @@ public class OfficerProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String badgeNumber;
 
+    /* Scope gets too complicated with ranks
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rank_id", nullable = false)
-    private Rank rank;
+    private Rank rank;*/
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "agency_id", nullable = false)
-    private Agency agency;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UnitRole role = UnitRole.UNIT_OFFICER; // Officer will maintain app and make requests, Head will approve requests and manage unit
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_posting_unit_id", nullable = false)

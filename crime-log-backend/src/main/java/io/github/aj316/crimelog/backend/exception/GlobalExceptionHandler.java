@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.failure("Invalid email or password: " + ex.getMessage()));
+                .body(ApiResponse.failure("Incorrect Credentials: " + ex.getMessage()));
     }
 
     @ExceptionHandler(AlreadyExistsException.class)

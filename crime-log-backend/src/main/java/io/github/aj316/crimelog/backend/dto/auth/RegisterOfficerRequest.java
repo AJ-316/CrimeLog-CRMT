@@ -1,5 +1,6 @@
-package io.github.aj316.crimelog.backend.dto;
+package io.github.aj316.crimelog.backend.dto.auth;
 
+import io.github.aj316.crimelog.backend.dto.PersonDto;
 import io.github.aj316.crimelog.backend.model.types.ActiveStatus;
 import io.github.aj316.crimelog.backend.model.types.Role;
 
@@ -12,8 +13,6 @@ public record RegisterOfficerRequest(
         PersonDto personDto,
 
         String badgeNumber,
-        Long rankId,
-        Long agencyId,
         Long departmentUnitId,
         LocalDate joiningDate,
         ActiveStatus activeStatus

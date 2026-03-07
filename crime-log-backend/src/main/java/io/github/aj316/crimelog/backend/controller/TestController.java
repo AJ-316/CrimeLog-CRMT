@@ -26,9 +26,15 @@ public class TestController {
         this.personRepository = personRepository;
     }
 
-    @GetMapping("/hello")
-    public String hello() {
-        return "Backend is connected";
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/hello/admin")
+    public String helloAdmin() {
+        return "Backend is connected and accessible to admin login!";
+    }
+
+    @GetMapping("/hello/public")
+    public String helloPublic() {
+        return "Backend is connected and accessible to the public login!";
     }
 
     @PreAuthorize("hasRole('ADMIN')")

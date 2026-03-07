@@ -1,5 +1,7 @@
-package io.github.aj316.crimelog.backend.dto;
+package io.github.aj316.crimelog.backend.dto.auth;
 
+import io.github.aj316.crimelog.backend.dto.AddressDto;
+import io.github.aj316.crimelog.backend.dto.PersonDto;
 import io.github.aj316.crimelog.backend.model.types.LawyerSpecialization;
 import io.github.aj316.crimelog.backend.model.types.LicenseStatus;
 import io.github.aj316.crimelog.backend.model.types.Role;
