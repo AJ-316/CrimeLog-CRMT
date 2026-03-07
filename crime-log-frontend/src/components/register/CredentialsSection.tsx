@@ -16,13 +16,16 @@ export default function CredentialsSection({
     onCredentialChange
 }: CredentialsSectionProps) {
     return (
-        <div className="rounded-xl border border-slate-200 p-4 text-left">
-            <h2 className="text-lg font-semibold text-slate-800">Account credentials</h2>
-            <p className="mt-1 text-sm text-slate-500">
-                Choose the email and password that will be used to log in.
-            </p>
+        <div className="space-y-5 text-left">
+            <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">Step 3</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">Account credentials</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                    Finish the registration with the email and password used to access CrimeLog.
+                </p>
+            </div>
 
-            <div className="mt-4 grid gap-4">
+            <div className="grid gap-4">
                 <RegisterField
                     error={errors.email}
                     id="email"
@@ -54,4 +57,3 @@ export default function CredentialsSection({
         </div>
     );
 }
-

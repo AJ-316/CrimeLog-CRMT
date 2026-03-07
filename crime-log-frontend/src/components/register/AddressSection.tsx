@@ -17,9 +17,14 @@ export default function AddressSection({
     onChange
 }: AddressSectionProps) {
     return (
-        <div className="rounded-xl border border-slate-200 p-4">
-            <h3 className="text-left text-base font-semibold text-slate-800">{title}</h3>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="rounded-[24px] border border-white/10 bg-white/4 p-4 sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-white">{title}</h3>
+                <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
+                    Address
+                </span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                 <RegisterField
                     error={errors[`${fieldPrefix}.street`]}
                     id={`${fieldPrefix}-street`}
@@ -52,17 +57,18 @@ export default function AddressSection({
                     required
                     value={address.postalCode}
                 />
-                <RegisterField
-                    error={errors[`${fieldPrefix}.countryCode`]}
-                    id={`${fieldPrefix}-countryCode`}
-                    label="Country code"
-                    onChange={(value) => onChange("countryCode", value)}
-                    placeholder="IN"
-                    required
-                    value={address.countryCode}
-                />
+                <div className="sm:col-span-2 xl:col-span-1">
+                    <RegisterField
+                        error={errors[`${fieldPrefix}.countryCode`]}
+                        id={`${fieldPrefix}-countryCode`}
+                        label="Country code"
+                        onChange={(value) => onChange("countryCode", value)}
+                        placeholder="IN"
+                        required
+                        value={address.countryCode}
+                    />
+                </div>
             </div>
         </div>
     );
 }
-
