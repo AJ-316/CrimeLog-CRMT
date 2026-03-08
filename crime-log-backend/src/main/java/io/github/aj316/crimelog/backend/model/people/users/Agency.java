@@ -19,6 +19,7 @@ public class Agency {
     @JoinColumn(name = "parent_agency_id")
     private Agency parentAgency;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AgencyType agencyType;
 

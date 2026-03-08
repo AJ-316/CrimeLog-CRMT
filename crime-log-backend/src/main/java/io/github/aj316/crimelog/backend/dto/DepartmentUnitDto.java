@@ -4,8 +4,8 @@ import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.types.UnitType;
 
 public record DepartmentUnitDto(
-        String unitCode,
-        AgencyDto agencyDto,
+        String unitCode, // generate in backend using unitType, agencyCode, and a provided sequence number
+        Long agencyId,
         UnitType unitType,
         String name,
         AddressDto addressDto
@@ -15,7 +15,6 @@ public record DepartmentUnitDto(
     public DepartmentUnit mapToEntity() {
         DepartmentUnit departmentUnit = new DepartmentUnit();
         departmentUnit.setUnitCode(unitCode);
-        departmentUnit.setAgency(agencyDto.mapToEntity());
         departmentUnit.setUnitType(unitType);
         departmentUnit.setName(name);
         departmentUnit.setAddress(addressDto.mapToEntity());

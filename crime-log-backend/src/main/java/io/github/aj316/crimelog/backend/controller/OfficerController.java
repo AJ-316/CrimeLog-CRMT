@@ -14,7 +14,6 @@ public class OfficerController {
 
     public OfficerController(OfficerService officerService) {
         this.officerService = officerService;
-
     }
 
     @PostMapping("/action/request")
