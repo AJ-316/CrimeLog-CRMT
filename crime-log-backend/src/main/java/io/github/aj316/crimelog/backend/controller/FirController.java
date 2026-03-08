@@ -1,7 +1,7 @@
 package io.github.aj316.crimelog.backend.controller;
 
 import io.github.aj316.crimelog.backend.dto.ApiResponse;
-import io.github.aj316.crimelog.backend.dto.FirRegisterRequest;
+import io.github.aj316.crimelog.backend.dto.cases.FirRegisterRequest;
 import io.github.aj316.crimelog.backend.service.FirService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

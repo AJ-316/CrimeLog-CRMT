@@ -18,7 +18,7 @@ public class UnitCodeValidator implements ConstraintValidator<ValidUnitCode, Str
         if (!parts[0].matches("[A-Z]{2,5}"))
             return false;
 
-        if(!UnitType.isValidCode(parts[1]))
+        if (!UnitType.isValidCode(parts[1]))
             return false;
 
         return parts[2].matches("\\d{2,4}");

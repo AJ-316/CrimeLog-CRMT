@@ -15,7 +15,9 @@ import java.lang.annotation.Target;
 public @interface ValidOfficerDepartmentUnit {
 
     String message() default "Officer's department UnitType mismatches required UnitType";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 
     UnitType unitType() default UnitType.POLICE_STATION;

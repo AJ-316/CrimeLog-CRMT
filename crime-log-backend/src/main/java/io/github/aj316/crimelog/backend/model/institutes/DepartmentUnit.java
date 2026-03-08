@@ -1,10 +1,9 @@
 package io.github.aj316.crimelog.backend.model.institutes;
 
 import io.github.aj316.crimelog.backend.model.Address;
+import io.github.aj316.crimelog.backend.model.types.UnitType;
 import io.github.aj316.crimelog.backend.validation.ValidAddressIfPhysical;
 import io.github.aj316.crimelog.backend.validation.ValidUnitCode;
-import io.github.aj316.crimelog.backend.model.people.users.Agency;
-import io.github.aj316.crimelog.backend.model.types.UnitType;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import lombok.Getter;

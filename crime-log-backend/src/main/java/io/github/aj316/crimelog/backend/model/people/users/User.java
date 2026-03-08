@@ -1,7 +1,7 @@
 package io.github.aj316.crimelog.backend.model.people.users;
 
 import io.github.aj316.crimelog.backend.model.people.Person;
-import io.github.aj316.crimelog.backend.model.types.AccountStatus;
+import io.github.aj316.crimelog.backend.model.types.Status;
 import io.github.aj316.crimelog.backend.model.types.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity
-@Table(name="users")
+@Table(name = "users")
 public class User {
 
     @Setter(AccessLevel.NONE)
@@ -37,5 +37,5 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AccountStatus accountStatus = AccountStatus.PENDING;
+    private Status accountStatus = Status.PENDING;
 }

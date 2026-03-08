@@ -1,4 +1,4 @@
-package io.github.aj316.crimelog.backend.model.people.users;
+package io.github.aj316.crimelog.backend.model.institutes;
 
 import io.github.aj316.crimelog.backend.model.types.AgencyType;
 import jakarta.persistence.*;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name="agencies")
+@Table(name = "agencies")
 public class Agency {
 
     @Id

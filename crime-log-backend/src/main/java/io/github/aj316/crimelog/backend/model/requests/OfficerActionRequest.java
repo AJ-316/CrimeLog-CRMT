@@ -1,4 +1,4 @@
-package io.github.aj316.crimelog.backend.model;
+package io.github.aj316.crimelog.backend.model.requests;
 
 import io.github.aj316.crimelog.backend.model.types.OfficerAction;
 import jakarta.persistence.*;

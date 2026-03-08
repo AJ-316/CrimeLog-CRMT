@@ -1,7 +1,7 @@
 package io.github.aj316.crimelog.backend.dto;
 
-import io.github.aj316.crimelog.backend.model.types.Gender;
 import io.github.aj316.crimelog.backend.model.people.Person;
+import io.github.aj316.crimelog.backend.model.types.Gender;
 
 import java.time.LocalDate;
 

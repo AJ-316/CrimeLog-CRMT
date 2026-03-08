@@ -3,7 +3,8 @@ package io.github.aj316.crimelog.backend.service.jwt;
 import io.github.aj316.crimelog.backend.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
@@ -16,6 +17,8 @@ import java.io.IOException;
 @Component
 public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
 
+    private static final Logger log = LoggerFactory.getLogger(CustomAuthEntryPoint.class);
+
     private final ObjectMapper objectMapper;
 
     public CustomAuthEntryPoint(ObjectMapper objectMapper) {
@@ -24,10 +27,12 @@ public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(
-            @NonNull HttpServletRequest request,
+            HttpServletRequest request,
             HttpServletResponse response,
-            @NonNull AuthenticationException authException
+            AuthenticationException authException
     ) throws IOException {
+
+        log.error("Authentication failed: {}", authException.getMessage(), authException);
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");

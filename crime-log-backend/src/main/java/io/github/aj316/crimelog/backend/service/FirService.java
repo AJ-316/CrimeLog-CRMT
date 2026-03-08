@@ -1,7 +1,7 @@
 package io.github.aj316.crimelog.backend.service;
 
-import io.github.aj316.crimelog.backend.dto.FirRegisterRequest;
-import io.github.aj316.crimelog.backend.model.FIR;
+import io.github.aj316.crimelog.backend.dto.cases.FirRegisterRequest;
+import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.people.users.OfficerProfile;
 import io.github.aj316.crimelog.backend.repository.DepartmentUnitRepository;
@@ -29,17 +29,17 @@ public class FirService {
         FIR fir = firRegisterRequest.mapToEntity();
         Optional<OfficerProfile> officerProfile = officerProfileRepository.findById(firRegisterRequest.officerIdCreatedBy());
 
-        if(officerProfile.isEmpty())
+        if (officerProfile.isEmpty())
             throw new NoSuchElementException("Officer ID who created the FIR must be provided");
 
         DepartmentUnit originDepartmentUnit = officerProfile.get().getCurrentPostingUnit();
 
-        if(originDepartmentUnit == null || !departmentUnitRepository.existsById(originDepartmentUnit.getId()))
+        if (originDepartmentUnit == null || !departmentUnitRepository.existsById(originDepartmentUnit.getId()))
             throw new NoSuchElementException("Origin department unit does not exist");
 
         Optional<DepartmentUnit> initialInvestigatingUnitId = departmentUnitRepository.findById(firRegisterRequest.initialInvestigatingUnitId());
 
-        if(initialInvestigatingUnitId.isEmpty())
+        if (initialInvestigatingUnitId.isEmpty())
             throw new NoSuchElementException("Initial investigating unit does not exist");
 
         fir.setOriginUnit(originDepartmentUnit);

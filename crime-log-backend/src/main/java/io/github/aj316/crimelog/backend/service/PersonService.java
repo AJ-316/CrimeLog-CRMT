@@ -17,7 +17,7 @@ public class PersonService {
 
     public Person addPerson(PersonDto personDto) {
         Person person = personDto.mapToEntity();
-        if(personRepository.existsByNationalId(personDto.nationalId()))
+        if (personRepository.existsByNationalId(personDto.nationalId()))
             throw new PersonAlreadyExistsException();
 
         return personRepository.save(person);

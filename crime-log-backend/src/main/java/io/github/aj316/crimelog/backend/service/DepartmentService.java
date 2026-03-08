@@ -23,7 +23,7 @@ public class DepartmentService {
         DepartmentUnit departmentUnit = departmentUnitDto.mapToEntity();
 
         departmentUnit.setAgency(agencyRepository.findById(departmentUnitDto.agencyId())
-                        .orElseThrow(() -> new NoSuchElementException("Agency with provided ID does not exist")));
+                .orElseThrow(() -> new NoSuchElementException("Agency with provided ID does not exist")));
 
         departmentUnitRepository.save(departmentUnit);
         return "Department Unit created successfully";

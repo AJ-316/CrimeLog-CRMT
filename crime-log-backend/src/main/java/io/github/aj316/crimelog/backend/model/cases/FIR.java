@@ -1,5 +1,6 @@
-package io.github.aj316.crimelog.backend.model;
+package io.github.aj316.crimelog.backend.model.cases;
 
+import io.github.aj316.crimelog.backend.model.Address;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.people.Person;
 import io.github.aj316.crimelog.backend.model.people.users.OfficerProfile;
@@ -19,11 +20,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name="fir")
+@Table(name = "fir")
 public class FIR {
 
     /// FIR details
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long firId;
@@ -41,7 +42,7 @@ public class FIR {
 
 
     /// Accused details
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Column(length = 50)
     private String accusedFirstName;
     @Column(length = 50)
@@ -53,18 +54,18 @@ public class FIR {
     @Embedded
     @Valid
     @AttributeOverrides({
-        @AttributeOverride(name = "street", column = @Column(name = "accused_street")),
-        @AttributeOverride(name = "city", column = @Column(name = "accused_city")),
-        @AttributeOverride(name = "state", column = @Column(name = "accused_state")),
-        @AttributeOverride(name = "postalCode", column = @Column(name = "accused_postal_code")),
-        @AttributeOverride(name = "countryCode", column = @Column(name = "accused_country"))
+            @AttributeOverride(name = "street", column = @Column(name = "accused_street")),
+            @AttributeOverride(name = "city", column = @Column(name = "accused_city")),
+            @AttributeOverride(name = "state", column = @Column(name = "accused_state")),
+            @AttributeOverride(name = "postalCode", column = @Column(name = "accused_postal_code")),
+            @AttributeOverride(name = "countryCode", column = @Column(name = "accused_country"))
     })
     private Address accusedAddress;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     /// Officer/Department details
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @ManyToOne(optional = false)
     @JoinColumn(name = "origin_unit_id")
     @ValidFirRegisterDepartmentUnit
@@ -87,17 +88,17 @@ public class FIR {
 
 
     /// Incident details
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // need nature of offense - theft, assault, fraud, cybercrime, etc.
 
     @Embedded
     @Valid
     @AttributeOverrides({
-        @AttributeOverride(name = "street", column = @Column(name = "incident_street")),
-        @AttributeOverride(name = "city", column = @Column(name = "incident_city")),
-        @AttributeOverride(name = "state", column = @Column(name = "incident_state")),
-        @AttributeOverride(name = "postalCode", column = @Column(name = "incident_postal_code")),
-        @AttributeOverride(name = "countryCode", column = @Column(name = "incident_country"))
+            @AttributeOverride(name = "street", column = @Column(name = "incident_street")),
+            @AttributeOverride(name = "city", column = @Column(name = "incident_city")),
+            @AttributeOverride(name = "state", column = @Column(name = "incident_state")),
+            @AttributeOverride(name = "postalCode", column = @Column(name = "incident_postal_code")),
+            @AttributeOverride(name = "countryCode", column = @Column(name = "incident_country"))
     })
     private Address incidentPlace;
 

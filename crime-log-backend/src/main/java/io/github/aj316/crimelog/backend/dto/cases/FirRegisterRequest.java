@@ -1,6 +1,8 @@
-package io.github.aj316.crimelog.backend.dto;
+package io.github.aj316.crimelog.backend.dto.cases;
 
-import io.github.aj316.crimelog.backend.model.FIR;
+import io.github.aj316.crimelog.backend.dto.AddressDto;
+import io.github.aj316.crimelog.backend.dto.MapDto;
+import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.model.types.FIR_Type;
 
 import java.time.LocalDateTime;
@@ -19,7 +21,6 @@ public record FirRegisterRequest(
 
         Long initialInvestigatingUnitId,
         Long officerIdCreatedBy, // current logged in officer's id
-        // todo Long originUnitId, // current logged in officer's department unit, fetch.
 
         AddressDto incidentPlace,
         LocalDateTime incidentDateTime,

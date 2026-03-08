@@ -52,11 +52,11 @@ public class LawyerProfile {
     @Embedded
     @Valid
     @AttributeOverrides({
-            @AttributeOverride(name = "street",         column = @Column(name = "office_street")),
-            @AttributeOverride(name = "city",           column = @Column(name = "office_city")),
-            @AttributeOverride(name = "state",          column = @Column(name = "office_state")),
-            @AttributeOverride(name = "postalCode",     column = @Column(name = "office_postal_code")),
-            @AttributeOverride(name = "countryCode",    column = @Column(name = "office_country_code"))
+            @AttributeOverride(name = "street", column = @Column(name = "office_street")),
+            @AttributeOverride(name = "city", column = @Column(name = "office_city")),
+            @AttributeOverride(name = "state", column = @Column(name = "office_state")),
+            @AttributeOverride(name = "postalCode", column = @Column(name = "office_postal_code")),
+            @AttributeOverride(name = "countryCode", column = @Column(name = "office_country_code"))
     })
     private Address officeAddress;
 

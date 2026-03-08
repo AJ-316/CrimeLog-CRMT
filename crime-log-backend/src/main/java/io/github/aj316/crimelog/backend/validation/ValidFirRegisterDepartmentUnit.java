@@ -14,7 +14,9 @@ import java.lang.annotation.Target;
 public @interface ValidFirRegisterDepartmentUnit {
 
     String message() default "FIR can only be registered at a police station";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 
 }

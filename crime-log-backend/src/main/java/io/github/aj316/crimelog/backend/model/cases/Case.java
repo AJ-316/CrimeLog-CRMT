@@ -1,6 +1,5 @@
 package io.github.aj316.crimelog.backend.model.cases;
 
-import io.github.aj316.crimelog.backend.model.FIR;
 import io.github.aj316.crimelog.backend.model.institutes.Court;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.types.CaseStage;

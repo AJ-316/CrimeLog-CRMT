@@ -1,7 +1,7 @@
 package io.github.aj316.crimelog.backend.service;
 
 import io.github.aj316.crimelog.backend.dto.AgencyDto;
-import io.github.aj316.crimelog.backend.model.people.users.Agency;
+import io.github.aj316.crimelog.backend.model.institutes.Agency;
 import io.github.aj316.crimelog.backend.repository.AgencyRepository;
 import org.springframework.stereotype.Service;
 

@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = AddressIfPhysicalValidator.class)
 public @interface ValidAddressIfPhysical {
     String message() default "Address is required when isPhysicalLocation is true";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 }

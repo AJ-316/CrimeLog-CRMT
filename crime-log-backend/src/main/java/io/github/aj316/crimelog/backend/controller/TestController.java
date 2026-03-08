@@ -44,7 +44,8 @@ public class TestController {
         return ResponseEntity.ok(ApiResponse.success(fetchAllUsers(), "Users retrieved successfully"));
     }
 
-    public static record TestNameDTO(String firstName) {}
+    public static record TestNameDTO(String firstName) {
+    }
 
     @PreAuthorize("hasRole('OFFICER')")
     @PostMapping("/test/officer/update-name/{id}")

@@ -1,7 +1,7 @@
 package io.github.aj316.crimelog.backend.service;
 
-import io.github.aj316.crimelog.backend.model.types.AccountStatus;
 import io.github.aj316.crimelog.backend.model.people.users.User;
+import io.github.aj316.crimelog.backend.model.types.Status;
 import io.github.aj316.crimelog.backend.repository.UserRepository;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,7 +29,7 @@ public class CrimeLogUserDetailsService implements UserDetailsService {
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
                 .roles(user.getRole().name())
-                .disabled(user.getAccountStatus() != AccountStatus.APPROVED)
+                .disabled(user.getAccountStatus() != Status.APPROVED)
                 .build();
     }
 }
