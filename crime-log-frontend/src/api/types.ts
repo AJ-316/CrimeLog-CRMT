@@ -27,9 +27,10 @@ export type AgencyType =
 
 export type Gender =
     | "MALE"
-    | "FEMALE";
+    | "FEMALE"
+    | "OTHER";
 
-export const GenderOptions = ["MALE", "FEMALE"] as const satisfies readonly Gender[];
+export const GenderOptions = ["MALE", "FEMALE", "OTHER"] as const satisfies readonly Gender[];
 
 export type LawyerSpecialization =
     | "CRIMINAL_LAW"
@@ -81,6 +82,25 @@ export type UnitType =
     | "SPECIAL_TASK_FORCE"
     | "TRAFFIC"
     | "INTELLIGENCE";
+
+export type FirType = "REGULAR" | "ZERO";
+export const FirTypeOptions = ["REGULAR", "ZERO"] as const satisfies readonly FirType[];
+
+export type CaseStage = "INVESTIGATION" | "TRIAL" | "APPEAL" | "CLOSED";
+export const CaseStageOptions = ["INVESTIGATION", "TRIAL", "APPEAL", "CLOSED"] as const satisfies readonly CaseStage[];
+
+export type CaseParticipantType = "VICTIM" | "SUSPECT" | "WITNESS";
+export const CaseParticipantTypeOptions = ["VICTIM", "SUSPECT", "WITNESS"] as const satisfies readonly CaseParticipantType[];
+
+export type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
+export const ReviewStatusOptions = ["PENDING", "APPROVED", "REJECTED"] as const satisfies readonly ReviewStatus[];
+
+export type RequestType = "TRANSFER_UNIT" | "TRANSFER_AGENCY" | "SUBMIT_CHARGE_SHEET" | "LAWYER_CASE_REQUEST";
+export const OfficerRequestTypeOptions = ["TRANSFER_UNIT", "TRANSFER_AGENCY", "SUBMIT_CHARGE_SHEET"] as const satisfies readonly RequestType[];
+export const LawyerRequestTypeOptions = ["LAWYER_CASE_REQUEST"] as const satisfies readonly RequestType[];
+
+export type LawyerRole = "DEFENSE" | "PROSECUTOR";
+export const LawyerRoleOptions = ["DEFENSE", "PROSECUTOR"] as const satisfies readonly LawyerRole[];
 
 export const UnitTypeInfo: Record<UnitType, { code: string; name: string }> = {
     POLICE_STATION:                     {code: "PS", name: "Police Station"},

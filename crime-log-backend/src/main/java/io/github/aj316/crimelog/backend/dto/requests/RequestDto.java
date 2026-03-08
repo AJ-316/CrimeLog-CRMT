@@ -21,7 +21,7 @@ import java.util.Map;
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = RequestDto.class, name = "SUBMIT_CHARGE_SHEET"),
-        @JsonSubTypes.Type(value = RequestDto.class, name = "LAWYER_CASE_REQUEST"),
+        @JsonSubTypes.Type(value = LawyerCaseRequestDto.class, name = "LAWYER_CASE_REQUEST"),
         @JsonSubTypes.Type(value = TransferAgencyRequestDto.class, name = "TRANSFER_AGENCY"),
         @JsonSubTypes.Type(value = TransferUnitRequestDto.class, name = "TRANSFER_UNIT")
 })

@@ -1,11 +1,13 @@
 package io.github.aj316.crimelog.backend.service;
 
 import io.github.aj316.crimelog.backend.dto.DepartmentUnitDto;
+import io.github.aj316.crimelog.backend.dto.DepartmentUnitOptionDto;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.repository.AgencyRepository;
 import io.github.aj316.crimelog.backend.repository.DepartmentUnitRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -27,5 +29,16 @@ public class DepartmentService {
 
         departmentUnitRepository.save(departmentUnit);
         return "Department Unit created successfully";
+    }
+
+    public List<DepartmentUnitOptionDto> getDepartmentUnits() {
+        return departmentUnitRepository.findAllByOrderByNameAsc().stream()
+                .map(unit -> new DepartmentUnitOptionDto(
+                        unit.getId(),
+                        unit.getName(),
+                        unit.getUnitCode(),
+                        unit.getAgency().getName()
+                ))
+                .toList();
     }
 }

@@ -1,10 +1,12 @@
 package io.github.aj316.crimelog.backend.service;
 
 import io.github.aj316.crimelog.backend.dto.AgencyDto;
+import io.github.aj316.crimelog.backend.dto.AgencyOptionDto;
 import io.github.aj316.crimelog.backend.model.institutes.Agency;
 import io.github.aj316.crimelog.backend.repository.AgencyRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -25,5 +27,15 @@ public class AgencyService {
 
         agencyRepository.save(agency);
         return "Agency created successfully";
+    }
+
+    public List<AgencyOptionDto> getAgencies() {
+        return agencyRepository.findAllByOrderByNameAsc().stream()
+                .map(agency -> new AgencyOptionDto(
+                        agency.getAgencyId(),
+                        agency.getName(),
+                        agency.getAgencyType()
+                ))
+                .toList();
     }
 }

@@ -1,7 +1,7 @@
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo} from "react";
 import {NavLink, Outlet, useLocation, useNavigate} from "react-router-dom";
 import type {Role} from "../../api/types.ts";
-import {clearAuthSession, getSessionRole, setPreferredRole} from "../../utils/auth-session.ts";
+import {clearAuthSession, getSessionRole} from "../../utils/auth-session.ts";
 
 export interface AppOutletContext {
     role: Role;
@@ -14,50 +14,42 @@ interface NavItem {
 }
 
 const commonNav: readonly NavItem[] = [
-    {label: "Dashboard", path: "/app", caption: "Command overview"},
-    {label: "Activity Feed", path: "/app/activity", caption: "Recent updates"},
-    {label: "Settings", path: "/app/settings", caption: "Preferences & profile"}
+    {label: "Dashboard", path: "/app", caption: "Workspace summary"}
 ];
 
 const roleNav: Record<Role, readonly NavItem[]> = {
     ADMIN: [
-        {label: "User Approvals", path: "/app/approvals", caption: "Access requests"},
-        {label: "System Audit", path: "/app/audit", caption: "Platform controls"}
+        {label: "Approvals", path: "/app/approvals", caption: "Review pending requests"},
+        {label: "Audit", path: "/app/audit", caption: "Operational metrics"}
     ],
     LAWYER: [
-        {label: "Clients", path: "/app/clients", caption: "Representation pipeline"},
-        {label: "Hearings", path: "/app/hearings", caption: "Court schedule"}
+        {label: "Cases", path: "/app/cases", caption: "Assigned matters"},
+        {label: "Clients", path: "/app/clients", caption: "Participants and status"},
+        {label: "Hearings", path: "/app/hearings", caption: "Representation requests"}
     ],
     OFFICER: [
-        {label: "Assignments", path: "/app/assignments", caption: "Field priorities"},
-        {label: "Field Notes", path: "/app/field-notes", caption: "Incident records"}
+        {label: "FIR", path: "/app/fir", caption: "Register and review FIRs"},
+        {label: "Cases", path: "/app/cases", caption: "Investigation files"},
+        {label: "Requests", path: "/app/requests", caption: "Transfer and action requests"}
     ],
-    PUBLIC: [
-        {label: "My Reports", path: "/app/reports", caption: "Submitted issues"},
-        {label: "Case Updates", path: "/app/cases", caption: "Track progress"}
-    ]
+    PUBLIC: []
 };
-
-const availableRoles: readonly Role[] = ["PUBLIC", "LAWYER", "OFFICER", "ADMIN"];
 
 export default function AppShell() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [role, setRole] = useState<Role>(() => getSessionRole());
+    const role = getSessionRole();
 
     const navItems = useMemo(() => [...commonNav, ...roleNav[role]], [role]);
+    const allowedPrefixes = useMemo(() => navItems.map((item) => item.path), [navItems]);
     const outletContext: AppOutletContext = {role};
 
     useEffect(() => {
-        setPreferredRole(role);
-    }, [role]);
-
-    useEffect(() => {
-        const allowedPaths = new Set(navItems.map((item) => item.path));
-        if (!allowedPaths.has(location.pathname)) {
+        const isAllowedPath = allowedPrefixes.some((prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`));
+        if (!isAllowedPath) {
             navigate("/app", {replace: true});
         }
-    }, [location.pathname, navigate, navItems]);
+    }, [allowedPrefixes, location.pathname, navigate]);
 
     const handleLogout = () => {
         clearAuthSession();
@@ -72,7 +64,7 @@ export default function AppShell() {
                         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">CrimeLog</p>
                         <h1 className="mt-3 text-2xl font-semibold tracking-tight">Operations workspace</h1>
                         <p className="mt-3 text-sm leading-6 text-slate-300">
-                            Move across reporting, review, and role-specific pages from one clear navigation panel.
+                            Move through FIRs, cases, approvals, and role-specific actions from one focused workspace.
                         </p>
                     </div>
 
@@ -99,26 +91,11 @@ export default function AppShell() {
 
                     <div className="mt-auto border-t border-white/10 px-4 py-5">
                         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Role preview</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Signed-in role</p>
+                            <p className="mt-2 text-lg font-semibold text-white">{role}</p>
                             <p className="mt-2 text-sm leading-6 text-slate-300">
-                                Switch roles to preview how navigation and page summaries change for different users.
+                                Navigation and page actions are tailored to this role.
                             </p>
-                            <div className="mt-4 grid grid-cols-2 gap-2">
-                                {availableRoles.map((option) => (
-                                    <button
-                                        className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
-                                            role === option
-                                                ? "bg-white text-slate-950"
-                                                : "bg-white/8 text-slate-200 hover:bg-white/15"
-                                        }`}
-                                        key={option}
-                                        onClick={() => setRole(option)}
-                                        type="button"
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
-                            </div>
                         </div>
 
                         <button
@@ -135,14 +112,14 @@ export default function AppShell() {
                     <div className="mb-6 flex flex-col gap-4 rounded-[24px] border border-white bg-white/75 px-4 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">CrimeLog workspace</p>
-                            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Stay on top of reports, cases, and team activity</h2>
+                            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Manage reporting, cases, and approvals in one place</h2>
                         </div>
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                             Signed in • Role context <span className="font-semibold text-slate-900">{role}</span>
                         </div>
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                         <Outlet context={outletContext} />
                     </div>
                 </main>

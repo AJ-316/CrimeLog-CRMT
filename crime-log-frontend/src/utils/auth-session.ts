@@ -2,6 +2,7 @@ import type {Role} from "../api/types.ts";
 
 const TOKEN_STORAGE_KEY = "token";
 const ROLE_STORAGE_KEY = "crimeLog.ui.role";
+const USER_ID_STORAGE_KEY = "crimeLog.user.id";
 const validRoles: readonly Role[] = ["ADMIN", "LAWYER", "OFFICER", "PUBLIC"];
 
 const isRole = (value: unknown): value is Role =>
@@ -72,12 +73,23 @@ export const setPreferredRole = (role: Role): void => {
     localStorage.setItem(ROLE_STORAGE_KEY, role);
 };
 
+export const setAuthSession = (token: string, userId: number, role: Role): void => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(USER_ID_STORAGE_KEY, String(userId));
+    setPreferredRole(role);
+};
+
 export const getPreferredRole = (): Role | null => {
     const storedRole = localStorage.getItem(ROLE_STORAGE_KEY);
     return isRole(storedRole) ? storedRole : null;
 };
 
 export const getSessionRole = (): Role => {
+    const storedRole = getPreferredRole();
+    if (storedRole) {
+        return storedRole;
+    }
+
     const token = getAuthToken();
     if (token) {
         const claims = parseJwtPayload(token);
@@ -87,11 +99,21 @@ export const getSessionRole = (): Role => {
         }
     }
 
-    return getPreferredRole() ?? "PUBLIC";
+    return "PUBLIC";
+};
+
+export const getSessionUserId = (): number | null => {
+    const storedUserId = localStorage.getItem(USER_ID_STORAGE_KEY);
+    if (!storedUserId) {
+        return null;
+    }
+
+    const parsedValue = Number(storedUserId);
+    return Number.isInteger(parsedValue) ? parsedValue : null;
 };
 
 export const clearAuthSession = (): void => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     localStorage.removeItem(ROLE_STORAGE_KEY);
+    localStorage.removeItem(USER_ID_STORAGE_KEY);
 };
-
