@@ -6,7 +6,8 @@ import type {DepartmentUnitOptionDto} from "../api/dtos/reference.ts";
 import {createCase} from "../api/services/case-services.ts";
 import {getFirs} from "../api/services/fir-services.ts";
 import {getDepartmentUnits} from "../api/services/reference-services.ts";
-import {PageHeader, SectionCard, inputClassName, primaryButtonClassName, secondaryButtonClassName} from "../components/app/WorkspaceUi.tsx";
+import {LoadingBlock, PageHeader, SectionCard, inputClassName, primaryButtonClassName, secondaryButtonClassName} from "../components/app/WorkspaceUi.tsx";
+import {getCurrentOfficerProfile} from "../api/services/officer-services.ts";
 import WorkspaceFormField from "../components/form/WorkspaceFormField.tsx";
 import {useFormState} from "../hooks/form-field-update.ts";
 
@@ -15,8 +16,10 @@ export default function CreateCasePage() {
     const [searchParams] = useSearchParams();
     const [firs, setFirs] = useState<FirSummaryDto[]>([]);
     const [units, setUnits] = useState<DepartmentUnitOptionDto[]>([]);
+    const [agencyName, setAgencyName] = useState<string>("");
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isCheckingAccess, setIsCheckingAccess] = useState(true);
     const preferredFirId = Number(searchParams.get("firId"));
 
     const initialState = useMemo<CreateCaseRequest>(() => ({
@@ -30,16 +33,34 @@ export default function CreateCasePage() {
     useEffect(() => {
         const loadOptions = async () => {
             try {
-                const [firResults, unitResults] = await Promise.all([getFirs(), getDepartmentUnits()]);
-                setFirs(firResults.filter((item) => item.caseId === null || item.firId === preferredFirId));
-                setUnits(unitResults);
+                setIsCheckingAccess(true);
+                const [profile, firResults, unitResults] = await Promise.all([
+                    getCurrentOfficerProfile(),
+                    getFirs(),
+                    getDepartmentUnits()
+                ]);
+
+                if (profile.unitType !== "POLICE_STATION") {
+                    navigate("/access-denied", {replace: true, state: {from: "/app/cases/new"}});
+                    return;
+                }
+
+                setFirs(
+                    firResults.filter((item) => (item.caseId === null || item.firId === preferredFirId) && item.initialInvestigatingUnitId === profile.departmentUnitId)
+                );
+
+                const officerAgencyUnits = unitResults.filter((unit) => unit.id === profile.departmentUnitId || unit.agencyName === unitResults.find((candidate) => candidate.id === profile.departmentUnitId)?.agencyName);
+                setUnits(officerAgencyUnits);
+                setAgencyName(unitResults.find((candidate) => candidate.id === profile.departmentUnitId)?.agencyName ?? "");
             } catch (loadError) {
                 setError(loadError instanceof Error ? loadError.message : "Failed to load case options");
+            } finally {
+                setIsCheckingAccess(false);
             }
         };
 
         void loadOptions();
-    }, [preferredFirId]);
+    }, [navigate, preferredFirId]);
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -56,8 +77,13 @@ export default function CreateCasePage() {
         }
     };
 
+    const filteredUnits = useMemo(() => units.filter((unit) => !agencyName || unit.agencyName === agencyName), [units, agencyName]);
+
     return (
         <section className="space-y-6">
+            {isCheckingAccess ? <LoadingBlock label="Checking officer access" /> : null}
+            {!isCheckingAccess ? (
+            <>
             <PageHeader
                 actions={<Link className={secondaryButtonClassName} to="/app/cases">Back to cases</Link>}
                 description="Open a new case from an FIR and assign the investigating unit that should own the file."
@@ -82,7 +108,7 @@ export default function CreateCasePage() {
                             Investigating unit
                             <select className={inputClassName} onChange={(event) => updateField("currentInvestigatingUnitId", event.target.value ? Number(event.target.value) : null)} value={form.currentInvestigatingUnitId ?? ""}>
                                 <option value="">Use the FIR unit</option>
-                                {units.map((unit) => (
+                                {filteredUnits.map((unit) => (
                                     <option key={unit.id} value={unit.id}>{unit.name} • {unit.agencyName}</option>
                                 ))}
                             </select>
@@ -99,7 +125,8 @@ export default function CreateCasePage() {
                     <Link className={secondaryButtonClassName} to="/app/cases">Cancel</Link>
                 </div>
             </form>
+            </>
+            ) : null}
         </section>
     );
 }
-

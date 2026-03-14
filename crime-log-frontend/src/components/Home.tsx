@@ -58,14 +58,9 @@ function Home() {
                         <p className="mt-2 text-sm text-slate-300">Secure case operations, incident intake, and role-aware coordination in one workspace.</p>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                        <button className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-100" onClick={() => openAuth("register")} type="button">
-                            Open access
+                        <button className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-5 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/15" onClick={() => navigate("/app")} type="button">
+                            {hasAuthToken() ? "Open workspace" : "Login"}
                         </button>
-                        {hasAuthToken() ? (
-                            <button className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-5 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/15" onClick={() => navigate("/app")} type="button">
-                                Open workspace
-                            </button>
-                        ) : null}
                     </div>
                 </header>
 

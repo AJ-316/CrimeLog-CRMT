@@ -23,7 +23,6 @@ import {
     validateRoleInfo,
     type ValidationErrors
 } from "./register/register-validation.ts";
-import {setPreferredRole} from "../utils/auth-session.ts";
 
 type RegisterStep = 1 | 2 | 3;
 
@@ -201,7 +200,7 @@ function Register({onSwitchToLogin}: RegisterProps) {
 
         try {
             const responseMessage = await register(buildRegisterRequest(form));
-            setPreferredRole(form.role);
+            // setPreferredRole(form.role);
             setSubmitSuccess(responseMessage);
             setErrors({});
             setStep(1);

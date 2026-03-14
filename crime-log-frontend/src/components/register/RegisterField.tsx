@@ -11,6 +11,7 @@ type SharedFieldProps = {
     error?: string;
     description?: string;
     required?: boolean;
+    disabled?: boolean;
 };
 
 type InputFieldProps = SharedFieldProps & {
@@ -21,6 +22,8 @@ type InputFieldProps = SharedFieldProps & {
     placeholder?: string;
     min?: number | string;
     step?: number | string;
+    pattern?: string;
+    title?: string;
 };
 
 type SelectFieldProps = SharedFieldProps & {
@@ -83,8 +86,10 @@ export default function RegisterField(props: RegisterFieldProps) {
                         aria-describedby={helperTextId}
                         aria-invalid={Boolean(props.error)}
                         className={selectClassName}
+                        disabled={props.disabled}
                         id={props.id}
                         onChange={(event) => props.onChange(event.target.value)}
+                        required={props.required}
                         value={props.value}
                     >
                         <option className="bg-slate-900 text-slate-200" value="">
@@ -107,11 +112,15 @@ export default function RegisterField(props: RegisterFieldProps) {
                     aria-describedby={helperTextId}
                     aria-invalid={Boolean(props.error)}
                     className={inputClassName}
+                    disabled={props.disabled}
                     id={props.id}
                     min={props.min}
                     onChange={(event) => props.onChange(event.target.value)}
+                    pattern={props.pattern}
                     placeholder={props.placeholder}
+                    required={props.required}
                     step={props.step}
+                    title={props.title}
                     type={props.type ?? "text"}
                     value={props.value}
                 />

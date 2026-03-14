@@ -1,8 +1,5 @@
 import type {Role} from "../api/types.ts";
 
-const TOKEN_STORAGE_KEY = "token";
-const ROLE_STORAGE_KEY = "crimeLog.ui.role";
-const USER_ID_STORAGE_KEY = "crimeLog.user.id";
 const validRoles: readonly Role[] = ["ADMIN", "LAWYER", "OFFICER", "PUBLIC"];
 
 const isRole = (value: unknown): value is Role =>
@@ -65,27 +62,20 @@ const getRoleFromClaims = (claims: Record<string, unknown>): Role | null => {
     return null;
 };
 
-export const getAuthToken = (): string | null => localStorage.getItem(TOKEN_STORAGE_KEY);
+export const getAuthToken = (): string | null => localStorage.getItem("token");
 
 export const hasAuthToken = (): boolean => Boolean(getAuthToken());
 
-export const setPreferredRole = (role: Role): void => {
-    localStorage.setItem(ROLE_STORAGE_KEY, role);
-};
+export const getRoleFromToken = (): Role | null => {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
 
-export const setAuthSession = (token: string, userId: number, role: Role): void => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    localStorage.setItem(USER_ID_STORAGE_KEY, String(userId));
-    setPreferredRole(role);
-};
-
-export const getPreferredRole = (): Role | null => {
-    const storedRole = localStorage.getItem(ROLE_STORAGE_KEY);
-    return isRole(storedRole) ? storedRole : null;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return isRole(payload.role) ? payload.role : null;
 };
 
 export const getSessionRole = (): Role => {
-    const storedRole = getPreferredRole();
+    const storedRole = getRoleFromToken();
     if (storedRole) {
         return storedRole;
     }
@@ -103,17 +93,14 @@ export const getSessionRole = (): Role => {
 };
 
 export const getSessionUserId = (): number | null => {
-    const storedUserId = localStorage.getItem(USER_ID_STORAGE_KEY);
-    if (!storedUserId) {
-        return null;
-    }
+    const token = localStorage.getItem("token");
+    if (!token) return null;
 
-    const parsedValue = Number(storedUserId);
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const parsedValue = Number(payload.uid);
     return Number.isInteger(parsedValue) ? parsedValue : null;
 };
 
 export const clearAuthSession = (): void => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    localStorage.removeItem(ROLE_STORAGE_KEY);
-    localStorage.removeItem(USER_ID_STORAGE_KEY);
+    localStorage.removeItem("token");
 };

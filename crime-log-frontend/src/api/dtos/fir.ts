@@ -8,6 +8,7 @@ export interface FirSummaryDto {
     registrationDateTime: string;
     accusedName: string;
     originUnitName: string | null;
+    initialInvestigatingUnitId: number | null;
     initialInvestigatingUnitName: string | null;
     incidentDateTime: string | null;
     incidentCity: string | null;
@@ -37,16 +38,15 @@ export interface FirRegisterRequest {
     firNumber: string;
     firType: FirType;
     registrationDateTime: string;
-    accusedFirstName: string;
-    accusedMiddleName: string;
-    accusedLastName: string;
-    accusedContact: string;
-    accusedDescription: string;
-    accusedAddress: AddressDto;
+    accusedFirstName?: string | null;
+    accusedMiddleName?: string | null;
+    accusedLastName?: string | null;
+    accusedContact?: string | null;
+    accusedDescription?: string | null;
+    accusedAddress?: AddressDto | null;
     initialInvestigatingUnitId: number;
     officerIdCreatedBy: number;
-    incidentPlace: AddressDto;
-    incidentDateTime: string;
-    incidentDescription: string;
+    incidentPlace?: AddressDto | null;
+    incidentDateTime?: string | null;
+    incidentDescription?: string | null;
 }
-

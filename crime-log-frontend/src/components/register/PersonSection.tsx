@@ -4,6 +4,8 @@ import {GenderOptions} from "../../api/types.ts";
 import AddressSection from "./AddressSection.tsx";
 import RegisterField, {type SelectOption} from "./RegisterField.tsx";
 import {RegisterRoleOptions, type PersonAddressKey, type PersonScalarFieldKey, type RegisterRole} from "./register-types.ts";
+import {useMemo} from "react";
+import {getCountryOptions} from "../../utils/location-data.ts";
 
 interface PersonSectionProps {
     person: PersonDto;
@@ -32,6 +34,8 @@ export default function PersonSection({
     onPersonChange,
     onAddressChange
 }: PersonSectionProps) {
+    const countryOptions = useMemo(() => getCountryOptions(), []);
+
     return (
         <div className="space-y-5">
             <div>
@@ -114,9 +118,10 @@ export default function PersonSection({
                 <RegisterField
                     error={errors["personDto.nationalityCode"]}
                     id="nationalityCode"
-                    label="Nationality code"
+                    kind="select"
+                    label="Country / Nationality"
                     onChange={(value) => onPersonChange("nationalityCode", value)}
-                    placeholder="US"
+                    options={countryOptions.map((country) => ({value: country.code, label: `${country.name} (${country.nationality})`}))}
                     required
                     value={person.nationalityCode}
                 />
@@ -125,7 +130,9 @@ export default function PersonSection({
                     id="contactPrimary"
                     label="Primary contact"
                     onChange={(value) => onPersonChange("contactPrimary", value)}
+                    pattern="\\+?[1-9]\\d{1,14}"
                     required
+                    title="Enter number in international format, e.g., +911234567890"
                     value={person.contactPrimary}
                 />
                 <RegisterField
@@ -133,6 +140,9 @@ export default function PersonSection({
                     id="contactSecondary"
                     label="Secondary contact"
                     onChange={(value) => onPersonChange("contactSecondary", value)}
+                    pattern="\\+?[1-9]\\d{1,14}"
+                    required
+                    title="Enter number in international format, e.g., +911234567890"
                     value={person.contactSecondary}
                 />
             </div>

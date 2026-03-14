@@ -17,7 +17,9 @@ public record DepartmentUnitDto(
         departmentUnit.setUnitCode(unitCode);
         departmentUnit.setUnitType(unitType);
         departmentUnit.setName(name);
-        departmentUnit.setAddress(addressDto.mapToEntity());
+
+        if(departmentUnit.getUnitType().isPhysicalLocation())
+            departmentUnit.setAddress(addressDto.mapToEntity());
 
         return departmentUnit;
     }

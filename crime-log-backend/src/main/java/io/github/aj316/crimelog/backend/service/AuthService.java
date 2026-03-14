@@ -1,6 +1,6 @@
 package io.github.aj316.crimelog.backend.service;
 
-import io.github.aj316.crimelog.backend.dto.LoginResponse;
+import io.github.aj316.crimelog.backend.dto.TokenDto;
 import io.github.aj316.crimelog.backend.dto.auth.LoginRequest;
 import io.github.aj316.crimelog.backend.dto.auth.RegisterLawyerRequest;
 import io.github.aj316.crimelog.backend.dto.auth.RegisterOfficerRequest;
@@ -42,20 +42,19 @@ public class AuthService {
         this.userRepository = userRepository;
     }
 
-    public LoginResponse login(LoginRequest request) {
+    public TokenDto login(LoginRequest request) {
         if (!userService.existsByEmail(request.email())) {
             throw new BadCredentialsException("Email");
         }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new IllegalArgumentException("User should exist as it was authenticated successfully"));
 
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("User should exist as it was authenticated successfully"));
-
-        return new LoginResponse(jwtService.generateToken(userDetails.getUsername()), user.getUserId(), user.getRole());
+        return new TokenDto(jwtService.generateToken(userDetails.getUsername(), user.getRole(), user.getUserId()));
     }
 
     @Transactional

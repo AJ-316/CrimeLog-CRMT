@@ -152,6 +152,7 @@ public class CaseService {
                 fir.getRegistrationDateTime(),
                 buildName(fir.getAccusedFirstName(), fir.getAccusedMiddleName(), fir.getAccusedLastName()),
                 fir.getOriginUnit() != null ? fir.getOriginUnit().getName() : null,
+                fir.getInitialInvestigatingUnit() != null ? fir.getInitialInvestigatingUnit().getId() : null,
                 fir.getInitialInvestigatingUnit() != null ? fir.getInitialInvestigatingUnit().getName() : null,
                 fir.getIncidentDateTime(),
                 fir.getIncidentPlace() != null ? fir.getIncidentPlace().getCity() : null,

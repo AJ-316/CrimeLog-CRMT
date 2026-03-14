@@ -100,6 +100,7 @@ public class FirService {
                 fir.getRegistrationDateTime(),
                 buildName(fir.getAccusedFirstName(), fir.getAccusedMiddleName(), fir.getAccusedLastName()),
                 getUnitName(fir.getOriginUnit()),
+                fir.getInitialInvestigatingUnit() != null ? fir.getInitialInvestigatingUnit().getId() : null,
                 getUnitName(fir.getInitialInvestigatingUnit()),
                 fir.getIncidentDateTime(),
                 fir.getIncidentPlace() != null ? fir.getIncidentPlace().getCity() : null,

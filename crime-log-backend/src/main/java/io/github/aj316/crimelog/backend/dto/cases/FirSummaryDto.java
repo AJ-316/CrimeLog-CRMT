@@ -11,6 +11,7 @@ public record FirSummaryDto(
         LocalDateTime registrationDateTime,
         String accusedName,
         String originUnitName,
+        Long initialInvestigatingUnitId,
         String initialInvestigatingUnitName,
         LocalDateTime incidentDateTime,
         String incidentCity,
@@ -18,4 +19,3 @@ public record FirSummaryDto(
         String caseNumber
 ) {
 }
-

@@ -37,8 +37,12 @@ public record FirRegisterRequest(
         fir.setAccusedMiddleName(accusedMiddleName);
         fir.setAccusedLastName(accusedLastName);
         fir.setAccusedContact(accusedContact);
-        fir.setAccusedAddress(accusedAddress.mapToEntity());
-        fir.setIncidentPlace(incidentPlace.mapToEntity());
+        if (accusedAddress != null) {
+            fir.setAccusedAddress(accusedAddress.mapToEntity());
+        }
+        if (incidentPlace != null) {
+            fir.setIncidentPlace(incidentPlace.mapToEntity());
+        }
         fir.setIncidentDateTime(incidentDateTime);
         fir.setIncidentDescription(incidentDescription);
         return fir;

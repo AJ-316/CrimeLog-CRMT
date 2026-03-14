@@ -28,6 +28,7 @@ export interface CaseDetailFirDto {
     registrationDateTime: string;
     accusedName: string;
     originUnitName: string | null;
+    initialInvestigatingUnitId: number | null;
     initialInvestigatingUnitName: string | null;
     incidentDateTime: string | null;
     incidentCity: string | null;
@@ -57,4 +58,3 @@ export interface CaseParticipantCreateRequest {
     personId: number;
     casePersonType: CaseParticipantType;
 }
-

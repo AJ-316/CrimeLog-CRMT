@@ -7,6 +7,11 @@ interface FormInputProps<T> {
     value: string
     field: keyof T
     update: <K extends keyof T>(field: K, value: T[K]) => void
+    placeholder?: string
+    pattern?: string
+    title?: string
+    required?: boolean
+    disabled?: boolean
 }
 
 export default function FormInput<T>({
@@ -15,7 +20,12 @@ export default function FormInput<T>({
                                       type = "text",
                                       value,
                                       field,
-                                      update
+                                      update,
+                                      placeholder,
+                                      pattern,
+                                      title,
+                                      required,
+                                      disabled
                                   }: FormInputProps<T>) {
     return (
         <input
@@ -24,6 +34,11 @@ export default function FormInput<T>({
             name={String(field)}
             type={type}
             value={value}
+            placeholder={placeholder}
+            pattern={pattern}
+            title={title}
+            required={required}
+            disabled={disabled}
             onChange={(e) => update(field, e.target.value as T[keyof T])}
         />
     )

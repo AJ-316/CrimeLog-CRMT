@@ -1,7 +1,7 @@
 export interface AddressDto {
-    street: string,
-    city: string,
-    state: string,
-    postalCode: string,
-    countryCode: string
+    street?: string | null,
+    city?: string | null,
+    state?: string | null,
+    postalCode?: string | null,
+    countryCode?: string | null
 }

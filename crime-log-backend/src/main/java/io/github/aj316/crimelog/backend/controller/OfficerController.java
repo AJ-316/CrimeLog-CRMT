@@ -1,11 +1,14 @@
 package io.github.aj316.crimelog.backend.controller;
 
 import io.github.aj316.crimelog.backend.dto.ApiResponse;
+import io.github.aj316.crimelog.backend.dto.OfficerProfileDto;
 import io.github.aj316.crimelog.backend.dto.requests.RequestDto;
 import io.github.aj316.crimelog.backend.model.types.Status;
 import io.github.aj316.crimelog.backend.service.OfficerService;
+import io.github.aj316.crimelog.backend.service.jwt.CustomUserDetails;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,6 +34,11 @@ public class OfficerController {
         String result = officerService.updateRequest(userId, requestId, status);
 
         return ResponseEntity.ok(ApiResponse.success(result, "Officer action status updated successfully"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<OfficerProfileDto>> getOfficerProfile(@AuthenticationPrincipal CustomUserDetails user) {
+        return ResponseEntity.ok(ApiResponse.success(officerService.getOfficerProfile(user.getUid()), "Officer profile retrieved successfully"));
     }
 
 

@@ -38,11 +38,11 @@ const addNonNegativeInteger = (errors: ValidationErrors, key: string, label: str
 };
 
 const validateAddress = (errors: ValidationErrors, prefix: string, label: string, address: AddressDto): void => {
-    addRequired(errors, `${prefix}.street`, `${label} street`, address.street);
-    addRequired(errors, `${prefix}.city`, `${label} city`, address.city);
-    addRequired(errors, `${prefix}.state`, `${label} state`, address.state);
-    addRequired(errors, `${prefix}.postalCode`, `${label} postal code`, address.postalCode);
-    addRequired(errors, `${prefix}.countryCode`, `${label} country code`, address.countryCode);
+    addRequired(errors, `${prefix}.street`, `${label} street`, address.street ?? "");
+    addRequired(errors, `${prefix}.city`, `${label} city`, address.city ?? "");
+    addRequired(errors, `${prefix}.state`, `${label} state`, address.state ?? "");
+    addRequired(errors, `${prefix}.postalCode`, `${label} postal code`, address.postalCode ?? "");
+    addRequired(errors, `${prefix}.countryCode`, `${label} country`, address.countryCode ?? "");
 };
 
 export const validateBasicInfo = (form: RegisterFormDraft): ValidationErrors => {
@@ -53,8 +53,9 @@ export const validateBasicInfo = (form: RegisterFormDraft): ValidationErrors => 
     addRequired(errors, "personDto.firstName", "First name", person.firstName);
     addRequired(errors, "personDto.lastName", "Last name", person.lastName);
     addRequired(errors, "personDto.dateOfBirth", "Date of birth", person.dateOfBirth);
-    addRequired(errors, "personDto.nationalityCode", "Nationality code", person.nationalityCode);
+    addRequired(errors, "personDto.nationalityCode", "Country / Nationality", person.nationalityCode);
     addRequired(errors, "personDto.contactPrimary", "Primary contact", person.contactPrimary);
+    addRequired(errors, "personDto.contactSecondary", "Secondary contact", person.contactSecondary);
 
     validateAddress(errors, "personDto.birthPlace", "Birth place", person.birthPlace);
     validateAddress(errors, "personDto.permanentAddress", "Permanent address", person.permanentAddress);
@@ -125,4 +126,3 @@ export const validateCredentials = (form: RegisterFormDraft): ValidationErrors =
 
     return errors;
 };
-

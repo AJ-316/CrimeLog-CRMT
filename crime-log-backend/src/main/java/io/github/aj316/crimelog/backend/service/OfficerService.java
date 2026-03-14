@@ -1,5 +1,6 @@
 package io.github.aj316.crimelog.backend.service;
 
+import io.github.aj316.crimelog.backend.dto.OfficerProfileDto;
 import io.github.aj316.crimelog.backend.dto.auth.RegisterOfficerRequest;
 import io.github.aj316.crimelog.backend.dto.requests.RequestDto;
 import io.github.aj316.crimelog.backend.dto.requests.RequestSummaryDto;
@@ -196,6 +197,13 @@ public class OfficerService {
         profile.setActiveStatus(request.activeStatus());
 
         return officerProfileRepository.save(profile);
+    }
+
+    public OfficerProfileDto getOfficerProfile(Long id) {
+        OfficerProfile profile = officerProfileRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Officer profile not found"));
+
+        return OfficerProfileDto.mapToDto(profile);
     }
 
     private RequestSummaryDto toSummary(Request request) {

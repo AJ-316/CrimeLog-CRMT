@@ -16,6 +16,8 @@ import ApprovalsPage from "./pages/ApprovalsPage.tsx";
 import LawyerClientsPage from "./pages/LawyerClientsPage.tsx";
 import LawyerHearingsPage from "./pages/LawyerHearingsPage.tsx";
 import AuditPage from "./pages/AuditPage.tsx";
+import RequireRole from "./components/app/RequireRole.tsx";
+import AccessDeniedPage from "./pages/AccessDeniedPage.tsx";
 
 function App() {
     return (
@@ -26,19 +28,33 @@ function App() {
                 <Route path="/register" element={<Navigate replace to="/?auth=register" />} />
 
                 <Route element={<RequireAuth />}>
+                    <Route path="/access-denied" element={<AccessDeniedPage />} />
+
                     <Route path="/app" element={<AppShell />}>
                         <Route index element={<Dashboard />} />
-                        <Route path="fir" element={<FIRListPage />} />
-                        <Route path="fir/new" element={<CreateFIRPage />} />
-                        <Route path="fir/:firId" element={<FIRDetailsPage />} />
-                        <Route path="cases" element={<CaseListPage />} />
-                        <Route path="cases/new" element={<CreateCasePage />} />
-                        <Route path="cases/:caseId" element={<CaseDetailsPage />} />
-                        <Route path="requests" element={<RequestsPage />} />
-                        <Route path="approvals" element={<ApprovalsPage />} />
-                        <Route path="clients" element={<LawyerClientsPage />} />
-                        <Route path="hearings" element={<LawyerHearingsPage />} />
-                        <Route path="audit" element={<AuditPage />} />
+
+                        <Route element={<RequireRole allowedRoles={["OFFICER"]} />}>
+                            <Route path="fir" element={<FIRListPage />} />
+                            <Route path="fir/new" element={<CreateFIRPage />} />
+                            <Route path="fir/:firId" element={<FIRDetailsPage />} />
+                            <Route path="cases/new" element={<CreateCasePage />} />
+                            <Route path="requests" element={<RequestsPage />} />
+                        </Route>
+
+                        <Route element={<RequireRole allowedRoles={["OFFICER", "LAWYER"]} />}>
+                            <Route path="cases" element={<CaseListPage />} />
+                            <Route path="cases/:caseId" element={<CaseDetailsPage />} />
+                        </Route>
+
+                        <Route element={<RequireRole allowedRoles={["ADMIN"]} />}>
+                            <Route path="approvals" element={<ApprovalsPage />} />
+                            <Route path="audit" element={<AuditPage />} />
+                        </Route>
+
+                        <Route element={<RequireRole allowedRoles={["LAWYER"]} />}>
+                            <Route path="clients" element={<LawyerClientsPage />} />
+                            <Route path="hearings" element={<LawyerHearingsPage />} />
+                        </Route>
                     </Route>
                 </Route>
 

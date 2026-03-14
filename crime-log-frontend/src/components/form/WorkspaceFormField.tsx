@@ -11,6 +11,10 @@ interface WorkspaceFormFieldProps<T> {
     type?: HTMLInputTypeAttribute;
     description?: string;
     required?: boolean;
+    placeholder?: string;
+    pattern?: string;
+    title?: string;
+    disabled?: boolean;
 }
 
 export default function WorkspaceFormField<T>({
@@ -21,7 +25,11 @@ export default function WorkspaceFormField<T>({
     update,
     type = "text",
     description,
-    required = false
+    required = false,
+    placeholder,
+    pattern,
+    title,
+    disabled
 }: WorkspaceFormFieldProps<T>) {
     const fieldId = id ?? String(field);
 
@@ -38,9 +46,13 @@ export default function WorkspaceFormField<T>({
                 type={type}
                 update={update}
                 value={value}
+                placeholder={placeholder}
+                pattern={pattern}
+                title={title}
+                required={required}
+                disabled={disabled}
             />
             {description ? <span className="mt-2 block text-sm text-slate-500">{description}</span> : null}
         </label>
     );
 }
-

@@ -96,11 +96,11 @@ export const createInitialRegisterForm = (): RegisterFormDraft => ({
 });
 
 const normalizeAddress = (address: AddressDto): AddressDto => ({
-    street: address.street.trim(),
-    city: address.city.trim(),
-    state: address.state.trim(),
-    postalCode: address.postalCode.trim(),
-    countryCode: address.countryCode.trim()
+    street: address.street?.trim(),
+    city: address.city?.trim(),
+    state: address.state?.trim(),
+    postalCode: address.postalCode?.trim(),
+    countryCode: address.countryCode?.trim()
 });
 
 const normalizePerson = (person: PersonDto): PersonDto => ({
