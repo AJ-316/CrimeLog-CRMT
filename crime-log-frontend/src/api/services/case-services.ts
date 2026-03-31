@@ -1,7 +1,16 @@
 import api from "../client.ts";
 import type {ApiResponse} from "../api.ts";
 import {getApiErrorMessage, requireApiData} from "../service-utils.ts";
-import type {CaseDetailDto, CaseParticipantCreateRequest, CaseParticipantDto, CaseSummaryDto, CreateCaseRequest} from "../dtos/case.ts";
+import type {
+    CaseDetailDto,
+    CaseParticipantCreateRequest,
+    CaseParticipantDto,
+    CaseSearchParams,
+    CaseStageUpdateRequest,
+    CaseSummaryDto,
+    CreateCaseRequest,
+    InvestigatingUnitUpdateRequest
+} from "../dtos/case.ts";
 
 export const getCases = async (): Promise<CaseSummaryDto[]> => {
     try {
@@ -9,6 +18,21 @@ export const getCases = async (): Promise<CaseSummaryDto[]> => {
         return requireApiData(res.data, "Failed to load cases");
     } catch (error) {
         throw new Error(getApiErrorMessage(error, "Failed to load cases"));
+    }
+};
+
+export const searchCases = async (params: CaseSearchParams): Promise<CaseSummaryDto[]> => {
+    try {
+        const searchParams = new URLSearchParams();
+        if (params.stage) searchParams.set("stage", params.stage);
+        if (typeof params.investigatingUnitId === "number") searchParams.set("investigatingUnitId", String(params.investigatingUnitId));
+        if (params.caseNumber?.trim()) searchParams.set("caseNumber", params.caseNumber.trim());
+
+        const suffix = searchParams.toString();
+        const res = await api.get<ApiResponse<CaseSummaryDto[]>>(`/cases/search${suffix ? `?${suffix}` : ""}`);
+        return requireApiData(res.data, "Failed to search cases");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to search cases"));
     }
 };
 
@@ -27,6 +51,24 @@ export const createCase = async (request: CreateCaseRequest): Promise<CaseSummar
         return requireApiData(res.data, "Failed to create case");
     } catch (error) {
         throw new Error(getApiErrorMessage(error, "Failed to create case"));
+    }
+};
+
+export const updateCaseStage = async (caseId: number, request: CaseStageUpdateRequest): Promise<CaseSummaryDto> => {
+    try {
+        const res = await api.patch<ApiResponse<CaseSummaryDto>>(`/cases/${caseId}/stage`, request);
+        return requireApiData(res.data, "Failed to update case stage");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to update case stage"));
+    }
+};
+
+export const updateCaseInvestigatingUnit = async (caseId: number, request: InvestigatingUnitUpdateRequest): Promise<CaseSummaryDto> => {
+    try {
+        const res = await api.patch<ApiResponse<CaseSummaryDto>>(`/cases/${caseId}/investigating-unit`, request);
+        return requireApiData(res.data, "Failed to update investigating unit");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to update investigating unit"));
     }
 };
 

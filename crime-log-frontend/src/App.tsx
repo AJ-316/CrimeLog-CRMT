@@ -16,6 +16,7 @@ import ApprovalsPage from "./pages/ApprovalsPage.tsx";
 import LawyerClientsPage from "./pages/LawyerClientsPage.tsx";
 import LawyerHearingsPage from "./pages/LawyerHearingsPage.tsx";
 import AuditPage from "./pages/AuditPage.tsx";
+import PersonHistoryPage from "./pages/PersonHistoryPage.tsx";
 
 function App() {
     return (
@@ -38,6 +39,7 @@ function App() {
                         <Route path="approvals" element={<ApprovalsPage />} />
                         <Route path="clients" element={<LawyerClientsPage />} />
                         <Route path="hearings" element={<LawyerHearingsPage />} />
+                        <Route path="people" element={<PersonHistoryPage />} />
                         <Route path="audit" element={<AuditPage />} />
                     </Route>
                 </Route>

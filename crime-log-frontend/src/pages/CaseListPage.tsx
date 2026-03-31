@@ -1,7 +1,11 @@
 import {useEffect, useState} from "react";
 import {Link, useNavigate, useOutletContext} from "react-router-dom";
 import type {CaseSummaryDto} from "../api/dtos/case.ts";
-import {getAssignedCases, getCases} from "../api/services/case-services.ts";
+import type {DepartmentUnitOptionDto} from "../api/dtos/reference.ts";
+import type {CaseStage} from "../api/types.ts";
+import {CaseStageOptions} from "../api/types.ts";
+import {getAssignedCases, getCases, searchCases} from "../api/services/case-services.ts";
+import {getDepartmentUnits} from "../api/services/reference-services.ts";
 import type {AppOutletContext} from "../components/app/AppShell.tsx";
 import {
     EmptyState,
@@ -9,6 +13,7 @@ import {
     PageHeader,
     SectionCard,
     StatusBadge,
+    inputClassName,
     primaryButtonClassName,
     tableCellClassName,
     tableClassName,
@@ -22,25 +27,66 @@ export default function CaseListPage() {
     const navigate = useNavigate();
     const {role} = useOutletContext<AppOutletContext>();
     const [cases, setCases] = useState<CaseSummaryDto[]>([]);
+    const [units, setUnits] = useState<DepartmentUnitOptionDto[]>([]);
+    const [stageFilter, setStageFilter] = useState<CaseStage | "">("");
+    const [unitFilter, setUnitFilter] = useState("");
+    const [caseNumberFilter, setCaseNumberFilter] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
-    useEffect(() => {
-        const loadCases = async () => {
-            try {
-                setIsLoading(true);
-                setError("");
+    const loadCases = async () => {
+        try {
+            setIsLoading(true);
+            setError("");
+
+            if (role === "LAWYER") {
                 const userId = getSessionUserId();
-                const result = role === "LAWYER" && userId ? await getAssignedCases(userId) : await getCases();
-                setCases(result);
-            } catch (loadError) {
-                setError(loadError instanceof Error ? loadError.message : "Failed to load cases");
-            } finally {
-                setIsLoading(false);
+                const assigned = userId ? await getAssignedCases(userId) : [];
+                const filtered = assigned.filter((caseItem) => {
+                    const stageMatches = !stageFilter || caseItem.caseStage === stageFilter;
+                    const numberMatches = !caseNumberFilter.trim() || caseItem.caseNumber.toLowerCase().includes(caseNumberFilter.trim().toLowerCase());
+                    return stageMatches && numberMatches;
+                });
+                setCases(filtered);
+                return;
+            }
+
+            if (stageFilter || unitFilter || caseNumberFilter.trim()) {
+                setCases(await searchCases({
+                    stage: stageFilter || undefined,
+                    investigatingUnitId: unitFilter ? Number(unitFilter) : undefined,
+                    caseNumber: caseNumberFilter.trim() || undefined
+                }));
+                return;
+            }
+
+            setCases(await getCases());
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : "Failed to load cases");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        void loadCases();
+    }, [role, stageFilter, unitFilter, caseNumberFilter]);
+
+    useEffect(() => {
+        if (role === "LAWYER") {
+            setUnits([]);
+            return;
+        }
+
+        const loadUnits = async () => {
+            try {
+                setUnits(await getDepartmentUnits());
+            } catch {
+                setUnits([]);
             }
         };
 
-        void loadCases();
+        void loadUnits();
     }, [role]);
 
     return (
@@ -53,6 +99,42 @@ export default function CaseListPage() {
             />
 
             <SectionCard description="Select a case to open full details and participant information." title="Cases">
+                <div className="mb-5 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-3">
+                    <label className="block text-sm font-medium text-slate-700">
+                        Case number
+                        <input
+                            className={inputClassName}
+                            onChange={(event) => setCaseNumberFilter(event.target.value)}
+                            placeholder="Search by case number"
+                            value={caseNumberFilter}
+                        />
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                        Stage
+                        <select className={inputClassName} onChange={(event) => setStageFilter(event.target.value as CaseStage | "")} value={stageFilter}>
+                            <option value="">All stages</option>
+                            {CaseStageOptions.map((stage) => (
+                                <option key={stage} value={stage}>{formatEnumLabel(stage)}</option>
+                            ))}
+                        </select>
+                    </label>
+                    {role !== "LAWYER" ? (
+                        <label className="block text-sm font-medium text-slate-700">
+                            Investigating unit
+                            <select className={inputClassName} onChange={(event) => setUnitFilter(event.target.value)} value={unitFilter}>
+                                <option value="">All units</option>
+                                {units.map((unit) => (
+                                    <option key={unit.id} value={unit.id}>{unit.name}</option>
+                                ))}
+                            </select>
+                        </label>
+                    ) : (
+                        <div className="flex items-end">
+                            <p className="text-xs text-slate-500">Lawyer view supports case number and stage filters on assigned cases.</p>
+                        </div>
+                    )}
+                </div>
+
                 {isLoading ? <LoadingBlock label="Loading cases" /> : null}
                 {!isLoading && error ? <EmptyState description={error} title="Unable to load cases" /> : null}
                 {!isLoading && !error && cases.length === 0 ? (

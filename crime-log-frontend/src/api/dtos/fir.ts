@@ -50,3 +50,11 @@ export interface FirRegisterRequest {
     incidentDescription: string;
 }
 
+export interface FirSearchParams {
+    query?: string;
+    firType?: FirType;
+    linkedToCase?: boolean;
+    registeredFrom?: string;
+    registeredTo?: string;
+}
+

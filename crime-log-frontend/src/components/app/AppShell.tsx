@@ -20,16 +20,19 @@ const commonNav: readonly NavItem[] = [
 const roleNav: Record<Role, readonly NavItem[]> = {
     ADMIN: [
         {label: "Approvals", path: "/app/approvals", caption: "Review pending requests"},
+        {label: "People", path: "/app/people", caption: "Criminal history lookup"},
         {label: "Audit", path: "/app/audit", caption: "Operational metrics"}
     ],
     LAWYER: [
         {label: "Cases", path: "/app/cases", caption: "Assigned matters"},
         {label: "Clients", path: "/app/clients", caption: "Participants and status"},
+        {label: "People", path: "/app/people", caption: "History and records"},
         {label: "Hearings", path: "/app/hearings", caption: "Representation requests"}
     ],
     OFFICER: [
         {label: "FIR", path: "/app/fir", caption: "Register and review FIRs"},
         {label: "Cases", path: "/app/cases", caption: "Investigation files"},
+        {label: "People", path: "/app/people", caption: "Criminal history lookup"},
         {label: "Requests", path: "/app/requests", caption: "Transfer and action requests"}
     ],
     PUBLIC: []

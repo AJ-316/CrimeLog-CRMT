@@ -1,5 +1,7 @@
 package io.github.aj316.crimelog.backend.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.aj316.crimelog.backend.dto.auth.RegisterOfficerRequest;
 import io.github.aj316.crimelog.backend.dto.requests.RequestDto;
 import io.github.aj316.crimelog.backend.dto.requests.RequestSummaryDto;
@@ -14,8 +16,6 @@ import io.github.aj316.crimelog.backend.model.people.users.User;
 import io.github.aj316.crimelog.backend.model.types.*;
 import io.github.aj316.crimelog.backend.repository.*;
 import org.springframework.stereotype.Service;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,6 +52,36 @@ public class OfficerService {
 
     public String addRequest(RequestDto requestDto) {
         Request request = requestDto.mapToEntity();
+        Case caseEntity = null;
+
+        if (request.getCaseId() == null) {
+            if (request.getFirId() == null) {
+                throw new IllegalArgumentException("Either caseId or firId must be provided");
+            }
+
+            caseEntity = caseRepository.findByFir_FirId(request.getFirId())
+                    .orElseThrow(() -> new NoSuchElementException("No case found for FIR id " + request.getFirId()));
+            request.setCaseId(caseEntity.getCaseId());
+        }
+
+        if (request.getFirId() == null) {
+            caseEntity = caseEntity != null ? caseEntity : caseRepository.findById(request.getCaseId())
+                    .orElseThrow(() -> new NoSuchElementException("Case not found"));
+            request.setFirId(caseEntity.getFir().getFirId());
+        }
+
+        if (request.getRequestType() == null) {
+            throw new IllegalArgumentException("requestType is required");
+        }
+
+        if (request.getRequestedByUserId() == null) {
+            throw new IllegalArgumentException("requestedByUserId is required");
+        }
+
+        if (request.getStatus() == null) {
+            request.setStatus(Status.PENDING);
+        }
+
         requestRepository.save(request);
         return "Request(" + request.getRequestId() + ") for " + request.getRequestType() + " has been submitted and is pending review.";
     }
@@ -101,10 +131,15 @@ public class OfficerService {
 
         request.setStatus(Status.APPROVED);
 
-        Map<String, Object> payload = objectMapper.readValue(
-                request.getPayloadJson(),
-                new TypeReference<>() {}
-        );
+        Map<String, Object> payload;
+        try {
+            payload = objectMapper.readValue(
+                    request.getPayloadJson(),
+                    new TypeReference<>() {}
+            );
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid payload JSON in request", e);
+        }
 
         switch (request.getRequestType()) {
             case TRANSFER_UNIT -> {
@@ -221,7 +256,12 @@ public class OfficerService {
     }
 
     private String buildTargetLabel(Request request) {
-        Map<String, Object> payload = objectMapper.readValue(request.getPayloadJson(), new TypeReference<>() {});
+        Map<String, Object> payload;
+        try {
+            payload = objectMapper.readValue(request.getPayloadJson(), new TypeReference<>() {});
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return "Unknown target";
+        }
 
         return switch (request.getRequestType()) {
             case TRANSFER_UNIT -> {

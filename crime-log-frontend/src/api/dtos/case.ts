@@ -58,3 +58,18 @@ export interface CaseParticipantCreateRequest {
     casePersonType: CaseParticipantType;
 }
 
+export interface CaseSearchParams {
+    stage?: CaseStage;
+    investigatingUnitId?: number;
+    caseNumber?: string;
+}
+
+export interface CaseStageUpdateRequest {
+    stage: CaseStage;
+    closedOn: string | null;
+}
+
+export interface InvestigatingUnitUpdateRequest {
+    departmentUnitId: number;
+}
+

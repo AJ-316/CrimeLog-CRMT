@@ -7,9 +7,11 @@ import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.model.cases.parties.CasePerson;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.people.Person;
+import io.github.aj316.crimelog.backend.model.types.CaseStage;
 import io.github.aj316.crimelog.backend.repository.*;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -41,6 +43,24 @@ public class CaseService {
 
     public List<CaseSummaryDto> getCaseSummaries() {
         return caseRepository.findAllByOrderByOpenedOnDesc().stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
+    public List<CaseSummaryDto> searchCases(CaseStage stage, Long investigatingUnitId, String caseNumber) {
+        Stream<Case> caseStream;
+
+        if (stage != null) {
+            caseStream = caseRepository.findByStageOrderByOpenedOnDesc(stage).stream();
+        } else if (investigatingUnitId != null) {
+            caseStream = caseRepository.findByCurrentInvestigatingUnit_IdOrderByOpenedOnDesc(investigatingUnitId).stream();
+        } else {
+            caseStream = caseRepository.findAllByOrderByOpenedOnDesc().stream();
+        }
+
+        return caseStream
+                .filter(caseEntity -> caseNumber == null || caseNumber.isBlank() ||
+                        caseEntity.getCaseNumber().toLowerCase().contains(caseNumber.trim().toLowerCase()))
                 .map(this::toSummary)
                 .toList();
     }
@@ -79,6 +99,40 @@ public class CaseService {
         caseEntity.setFir(fir);
         caseEntity.setCurrentInvestigatingUnit(investigatingUnit);
 
+        return toSummary(caseRepository.save(caseEntity));
+    }
+
+    public CaseSummaryDto updateCaseStage(Long caseId, CaseStage stage, LocalDate closedOn) {
+        if (stage == null) {
+            throw new IllegalArgumentException("Case stage is required");
+        }
+
+        Case caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new NoSuchElementException("Case not found"));
+
+        caseEntity.setStage(stage);
+
+        if (stage == CaseStage.CLOSED) {
+            caseEntity.setClosedOn(closedOn != null ? closedOn : LocalDate.now());
+        } else if (closedOn != null) {
+            caseEntity.setClosedOn(closedOn);
+        }
+
+        return toSummary(caseRepository.save(caseEntity));
+    }
+
+    public CaseSummaryDto updateInvestigatingUnit(Long caseId, Long departmentUnitId) {
+        if (departmentUnitId == null) {
+            throw new IllegalArgumentException("departmentUnitId is required");
+        }
+
+        Case caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new NoSuchElementException("Case not found"));
+
+        DepartmentUnit departmentUnit = departmentUnitRepository.findById(departmentUnitId)
+                .orElseThrow(() -> new NoSuchElementException("Department unit not found"));
+
+        caseEntity.setCurrentInvestigatingUnit(departmentUnit);
         return toSummary(caseRepository.save(caseEntity));
     }
 

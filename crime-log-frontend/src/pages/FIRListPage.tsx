@@ -1,7 +1,9 @@
 import {useEffect, useState} from "react";
 import {Link, useNavigate, useOutletContext} from "react-router-dom";
 import type {FirSummaryDto} from "../api/dtos/fir.ts";
-import {getFirs} from "../api/services/fir-services.ts";
+import type {FirType} from "../api/types.ts";
+import {FirTypeOptions} from "../api/types.ts";
+import {getFirs, searchFirs} from "../api/services/fir-services.ts";
 import type {AppOutletContext} from "../components/app/AppShell.tsx";
 import {
     EmptyState,
@@ -9,6 +11,7 @@ import {
     PageHeader,
     SectionCard,
     StatusBadge,
+    inputClassName,
     primaryButtonClassName,
     tableCellClassName,
     tableClassName,
@@ -21,6 +24,11 @@ export default function FIRListPage() {
     const navigate = useNavigate();
     const {role} = useOutletContext<AppOutletContext>();
     const [firs, setFirs] = useState<FirSummaryDto[]>([]);
+    const [queryFilter, setQueryFilter] = useState("");
+    const [firTypeFilter, setFirTypeFilter] = useState<FirType | "">("");
+    const [linkedFilter, setLinkedFilter] = useState("");
+    const [registeredFrom, setRegisteredFrom] = useState("");
+    const [registeredTo, setRegisteredTo] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -29,7 +37,17 @@ export default function FIRListPage() {
             try {
                 setIsLoading(true);
                 setError("");
-                setFirs(await getFirs());
+                if (queryFilter.trim() || firTypeFilter || linkedFilter || registeredFrom || registeredTo) {
+                    setFirs(await searchFirs({
+                        query: queryFilter.trim() || undefined,
+                        firType: firTypeFilter || undefined,
+                        linkedToCase: linkedFilter === "" ? undefined : linkedFilter === "true",
+                        registeredFrom: registeredFrom ? new Date(registeredFrom).toISOString() : undefined,
+                        registeredTo: registeredTo ? new Date(registeredTo).toISOString() : undefined
+                    }));
+                } else {
+                    setFirs(await getFirs());
+                }
             } catch (loadError) {
                 setError(loadError instanceof Error ? loadError.message : "Failed to load FIRs");
             } finally {
@@ -38,7 +56,7 @@ export default function FIRListPage() {
         };
 
         void loadFirs();
-    }, []);
+    }, [queryFilter, firTypeFilter, linkedFilter, registeredFrom, registeredTo]);
 
     return (
         <section className="space-y-6">
@@ -50,6 +68,46 @@ export default function FIRListPage() {
             />
 
             <SectionCard description="Each row opens the complete FIR record." title="FIR register">
+                <div className="mb-5 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-3">
+                    <label className="block text-sm font-medium text-slate-700">
+                        Keyword
+                        <input
+                            className={inputClassName}
+                            onChange={(event) => setQueryFilter(event.target.value)}
+                            placeholder="FIR number, accused name, description"
+                            value={queryFilter}
+                        />
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                        FIR type
+                        <select className={inputClassName} onChange={(event) => setFirTypeFilter(event.target.value as FirType | "")} value={firTypeFilter}>
+                            <option value="">All types</option>
+                            {FirTypeOptions.map((firType) => (
+                                <option key={firType} value={firType}>{formatEnumLabel(firType)}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                        Linked to case
+                        <select className={inputClassName} onChange={(event) => setLinkedFilter(event.target.value)} value={linkedFilter}>
+                            <option value="">All</option>
+                            <option value="true">Linked only</option>
+                            <option value="false">Unlinked only</option>
+                        </select>
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                        Registered from
+                        <input className={inputClassName} onChange={(event) => setRegisteredFrom(event.target.value)} type="datetime-local" value={registeredFrom} />
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                        Registered to
+                        <input className={inputClassName} onChange={(event) => setRegisteredTo(event.target.value)} type="datetime-local" value={registeredTo} />
+                    </label>
+                    <div className="flex items-end">
+                        <p className="text-xs text-slate-500">Filters run live and use the new FIR search API.</p>
+                    </div>
+                </div>
+
                 {isLoading ? <LoadingBlock label="Loading FIR register" /> : null}
                 {!isLoading && error ? <EmptyState description={error} title="Unable to load FIRs" /> : null}
                 {!isLoading && !error && firs.length === 0 ? (

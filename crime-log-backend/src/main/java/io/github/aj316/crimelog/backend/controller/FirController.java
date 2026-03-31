@@ -4,11 +4,14 @@ import io.github.aj316.crimelog.backend.dto.ApiResponse;
 import io.github.aj316.crimelog.backend.dto.cases.FirDetailDto;
 import io.github.aj316.crimelog.backend.dto.cases.FirRegisterRequest;
 import io.github.aj316.crimelog.backend.dto.cases.FirSummaryDto;
+import io.github.aj316.crimelog.backend.model.types.FIR_Type;
 import io.github.aj316.crimelog.backend.service.FirService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -26,7 +29,21 @@ public class FirController {
         return ResponseEntity.ok(ApiResponse.success(firService.getFirs(), "FIRs retrieved successfully"));
     }
 
-    @GetMapping("/{firId}")
+    @GetMapping({"/search", "/_search"})
+    public ResponseEntity<ApiResponse<List<FirSummaryDto>>> searchFirs(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) FIR_Type firType,
+            @RequestParam(required = false) Boolean linkedToCase,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime registeredFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime registeredTo
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                firService.searchFirs(query, firType, linkedToCase, registeredFrom, registeredTo),
+                "Filtered FIRs retrieved successfully"
+        ));
+    }
+
+    @GetMapping("/{firId:\\d+}")
     public ResponseEntity<ApiResponse<FirDetailDto>> getFir(@PathVariable Long firId) {
         return ResponseEntity.ok(ApiResponse.success(firService.getFir(firId), "FIR retrieved successfully"));
     }

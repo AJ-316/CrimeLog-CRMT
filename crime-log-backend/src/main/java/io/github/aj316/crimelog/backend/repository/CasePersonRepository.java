@@ -9,5 +9,9 @@ import java.util.List;
 public interface CasePersonRepository extends JpaRepository<CasePerson, Long> {
     List<CasePerson> findByCaseEntity_CaseIdOrderByAddedOnDesc(Long caseId);
 
+    List<CasePerson> findByPerson_PersonIdOrderByAddedOnDesc(Long personId);
+
+    List<CasePerson> findByPerson_PersonIdAndCasePersonTypeOrderByAddedOnDesc(Long personId, CasePersonType casePersonType);
+
     boolean existsByCaseEntity_CaseIdAndPerson_PersonIdAndCasePersonType(Long caseId, Long personId, CasePersonType casePersonType);
 }
