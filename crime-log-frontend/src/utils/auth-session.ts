@@ -65,22 +65,22 @@ const getRoleFromClaims = (claims: Record<string, unknown>): Role | null => {
     return null;
 };
 
-export const getAuthToken = (): string | null => localStorage.getItem(TOKEN_STORAGE_KEY);
+export const getAuthToken = (): string | null => sessionStorage.getItem(TOKEN_STORAGE_KEY);
 
 export const hasAuthToken = (): boolean => Boolean(getAuthToken());
 
 export const setPreferredRole = (role: Role): void => {
-    localStorage.setItem(ROLE_STORAGE_KEY, role);
+    sessionStorage.setItem(ROLE_STORAGE_KEY, role);
 };
 
 export const setAuthSession = (token: string, userId: number, role: Role): void => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    localStorage.setItem(USER_ID_STORAGE_KEY, String(userId));
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    sessionStorage.setItem(USER_ID_STORAGE_KEY, String(userId));
     setPreferredRole(role);
 };
 
 export const getPreferredRole = (): Role | null => {
-    const storedRole = localStorage.getItem(ROLE_STORAGE_KEY);
+    const storedRole = sessionStorage.getItem(ROLE_STORAGE_KEY);
     return isRole(storedRole) ? storedRole : null;
 };
 
@@ -103,7 +103,7 @@ export const getSessionRole = (): Role => {
 };
 
 export const getSessionUserId = (): number | null => {
-    const storedUserId = localStorage.getItem(USER_ID_STORAGE_KEY);
+    const storedUserId = sessionStorage.getItem(USER_ID_STORAGE_KEY);
     if (!storedUserId) {
         return null;
     }
@@ -113,7 +113,7 @@ export const getSessionUserId = (): number | null => {
 };
 
 export const clearAuthSession = (): void => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    localStorage.removeItem(ROLE_STORAGE_KEY);
-    localStorage.removeItem(USER_ID_STORAGE_KEY);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(ROLE_STORAGE_KEY);
+    sessionStorage.removeItem(USER_ID_STORAGE_KEY);
 };

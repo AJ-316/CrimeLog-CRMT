@@ -3,6 +3,7 @@ package io.github.aj316.crimelog.backend.controller;
 import io.github.aj316.crimelog.backend.dto.ApiResponse;
 import io.github.aj316.crimelog.backend.dto.requests.RequestDto;
 import io.github.aj316.crimelog.backend.model.types.Status;
+import io.github.aj316.crimelog.backend.service.AuthenticatedUserService;
 import io.github.aj316.crimelog.backend.service.OfficerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,21 +15,25 @@ import org.springframework.web.bind.annotation.*;
 public class OfficerController {
 
     private final OfficerService officerService;
+    private final AuthenticatedUserService authenticatedUserService;
 
-    public OfficerController(OfficerService officerService) {
+    public OfficerController(OfficerService officerService, AuthenticatedUserService authenticatedUserService) {
         this.officerService = officerService;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     @PreAuthorize("hasRole('OFFICER')")
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<String>> sendRequest(@RequestBody RequestDto request) {
+        request.setRequestedByUserId(authenticatedUserService.getCurrentUserId());
         String result = officerService.addRequest(request);
         return ResponseEntity.ok(ApiResponse.success(result, "Officer action processed successfully"));
     }
 
     @PostMapping("/request/{requestId}")
-    public ResponseEntity<ApiResponse<String>> updateRequest(@PathVariable Long requestId, @RequestParam(name = "d") Long userId, @RequestParam Status status) {
-        String result = officerService.updateRequest(userId, requestId, status);
+    public ResponseEntity<ApiResponse<String>> updateRequest(@PathVariable Long requestId, @RequestParam Status status) {
+        Long reviewerUserId = authenticatedUserService.getCurrentUserId();
+        String result = officerService.updateRequest(reviewerUserId, requestId, status);
 
         return ResponseEntity.ok(ApiResponse.success(result, "Officer action status updated successfully"));
     }

@@ -5,6 +5,7 @@ import io.github.aj316.crimelog.backend.dto.cases.FirDetailDto;
 import io.github.aj316.crimelog.backend.dto.cases.FirRegisterRequest;
 import io.github.aj316.crimelog.backend.dto.cases.FirSummaryDto;
 import io.github.aj316.crimelog.backend.model.types.FIR_Type;
+import io.github.aj316.crimelog.backend.service.AuthenticatedUserService;
 import io.github.aj316.crimelog.backend.service.FirService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,9 +20,11 @@ import java.util.List;
 public class FirController {
 
     private final FirService firService;
+    private final AuthenticatedUserService authenticatedUserService;
 
-    public FirController(FirService firService) {
+    public FirController(FirService firService, AuthenticatedUserService authenticatedUserService) {
         this.firService = firService;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     @GetMapping
@@ -51,6 +54,24 @@ public class FirController {
     @PreAuthorize("hasRole('OFFICER')")
     @PostMapping
     public ResponseEntity<ApiResponse<String>> createFIR(@RequestBody FirRegisterRequest firRegisterRequest) {
-        return ResponseEntity.ok(ApiResponse.success(firService.createFir(firRegisterRequest), "FIR registered successfully"));
+        Long authenticatedOfficerUserId = authenticatedUserService.getCurrentUserId();
+        FirRegisterRequest normalizedRequest = new FirRegisterRequest(
+                firRegisterRequest.firNumber(),
+                firRegisterRequest.firType(),
+                firRegisterRequest.registrationDateTime(),
+                firRegisterRequest.accusedFirstName(),
+                firRegisterRequest.accusedMiddleName(),
+                firRegisterRequest.accusedLastName(),
+                firRegisterRequest.accusedContact(),
+                firRegisterRequest.accusedDescription(),
+                firRegisterRequest.accusedAddress(),
+                firRegisterRequest.initialInvestigatingUnitId(),
+                authenticatedOfficerUserId,
+                firRegisterRequest.incidentPlace(),
+                firRegisterRequest.incidentDateTime(),
+                firRegisterRequest.incidentDescription()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(firService.createFir(normalizedRequest), "FIR registered successfully"));
     }
 }

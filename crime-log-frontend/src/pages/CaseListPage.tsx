@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {Link, useNavigate, useOutletContext} from "react-router-dom";
 import type {CaseSummaryDto} from "../api/dtos/case.ts";
 import type {DepartmentUnitOptionDto} from "../api/dtos/reference.ts";
@@ -34,7 +34,7 @@ export default function CaseListPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const loadCases = async () => {
+    const loadCases = useCallback(async () => {
         try {
             setIsLoading(true);
             setError("");
@@ -66,11 +66,11 @@ export default function CaseListPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [role, stageFilter, unitFilter, caseNumberFilter]);
 
     useEffect(() => {
         void loadCases();
-    }, [role, stageFilter, unitFilter, caseNumberFilter]);
+    }, [loadCases]);
 
     useEffect(() => {
         if (role === "LAWYER") {

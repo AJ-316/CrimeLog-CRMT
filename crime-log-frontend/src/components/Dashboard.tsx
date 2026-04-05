@@ -6,8 +6,11 @@ import {getFirs} from "../api/services/fir-services.ts";
 import {getAssignedCases, getCases} from "../api/services/case-services.ts";
 import {getMyRequests, getPendingRequests} from "../api/services/request-services.ts";
 import {getPendingUsers} from "../api/services/user-services.ts";
+import {getAlerts} from "../api/services/alert-services.ts";
 import {getSessionUserId} from "../utils/auth-session.ts";
 import {primaryButtonClassName, secondaryButtonClassName} from "./app/WorkspaceUi.tsx";
+import type {AlertDto} from "../api/dtos/alert.ts";
+import {formatDateTime, formatEnumLabel} from "../utils/display.ts";
 
 interface DashboardMetric {
     label: string;
@@ -23,16 +26,18 @@ interface QuickLink {
 }
 
 const roleNarrative: Record<Role, string> = {
-    ADMIN: "Review incoming requests, keep oversight metrics visible, and move approvals forward with a clean queue.",
+    ADMIN: "Review incoming requests, private crime reports, and oversight metrics from a single dashboard.",
     LAWYER: "Track assigned matters, request representation on new cases, and keep participant context close at hand.",
-    OFFICER: "Stay on top of FIR intake, case workload, and operational requests from a single dashboard.",
-    PUBLIC: "Use the dashboard as your entry point into the secured CrimeLog workspace."
+    OFFICER: "Stay on top of FIR intake, reported cases, case workload, and operational requests from a single dashboard.",
+    PUBLIC: "Submit private crime reports and follow public safety alerts from your dashboard."
 };
 
 const quickLinksByRole: Record<Role, QuickLink[]> = {
     ADMIN: [
         {label: "Open approvals", description: "Review the pending request queue.", to: "/app/approvals", primary: true},
+        {label: "Reported cases", description: "Review private crime reports from the public.", to: "/app/reports"},
         {label: "Add person", description: "Register a new person record.", to: "/app/persons/new"},
+        {label: "Publish alert", description: "Send a public safety alert.", to: "/app/alerts"},
         {label: "View audit", description: "See current operational totals.", to: "/app/audit"}
     ],
     LAWYER: [
@@ -42,17 +47,24 @@ const quickLinksByRole: Record<Role, QuickLink[]> = {
     ],
     OFFICER: [
         {label: "Create FIR", description: "Register a new first information report.", to: "/app/fir/new", primary: true},
+        {label: "Reported cases", description: "Review and acknowledge private crime reports.", to: "/app/reports"},
         {label: "View cases", description: "Review investigation files and participants.", to: "/app/cases"},
         {label: "Add person", description: "Register a new person record.", to: "/app/persons/new"},
+        {label: "Publish alert", description: "Send a public safety alert.", to: "/app/alerts"},
         {label: "Submit request", description: "Send transfer or charge-sheet requests.", to: "/app/requests"}
     ],
-    PUBLIC: []
+    PUBLIC: [
+        {label: "Report crime", description: "Submit a private crime report to police.", to: "/app/reports", primary: true},
+        {label: "View alerts", description: "Check active public safety alerts.", to: "/app/alerts"}
+    ]
 };
+
+const PUBLIC_ALERT_NOTICE_KEY = "crimeLog.public.alert.lastSeen";
 
 function Dashboard() {
     const {role} = useOutletContext<AppOutletContext>();
     const [metrics, setMetrics] = useState<DashboardMetric[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [publicAlertNotice, setPublicAlertNotice] = useState<AlertDto | null>(null);
     const [error, setError] = useState("");
 
     const quickLinks = useMemo(() => quickLinksByRole[role], [role]);
@@ -60,12 +72,11 @@ function Dashboard() {
     useEffect(() => {
         const loadDashboard = async () => {
             try {
-                setIsLoading(true);
                 setError("");
                 const userId = getSessionUserId();
 
                 if (role === "OFFICER" && userId) {
-                    const [firs, cases, requests] = await Promise.all([getFirs(), getCases(), getMyRequests(userId)]);
+                    const [firs, cases, requests] = await Promise.all([getFirs(), getCases(), getMyRequests()]);
                     setMetrics([
                         {label: "Total FIRs", value: String(firs.length), detail: "FIRs currently visible in the register."},
                         {label: "Total cases", value: String(cases.length), detail: "Investigation files currently tracked."},
@@ -86,11 +97,29 @@ function Dashboard() {
                 }
 
                 if (role === "LAWYER" && userId) {
-                    const [assignedCases, allCases, requests] = await Promise.all([getAssignedCases(userId), getCases(), getMyRequests(userId)]);
+                    const [assignedCases, allCases, requests] = await Promise.all([getAssignedCases(userId), getCases(), getMyRequests()]);
                     setMetrics([
                         {label: "Assigned cases", value: String(assignedCases.length), detail: "Matters currently assigned to this lawyer."},
                         {label: "Open cases", value: String(allCases.filter((caseItem) => caseItem.caseStage !== "CLOSED").length), detail: "Open case records visible for legal review."},
                         {label: "Pending requests", value: String(requests.filter((request) => request.status === "PENDING").length), detail: "Representation requests still under review."}
+                    ]);
+                    return;
+                }
+
+                if (role === "PUBLIC") {
+                    const alerts = await getAlerts();
+                    if (alerts.length > 0) {
+                        const latestAlert = alerts[0];
+                        const lastSeenAlertId = sessionStorage.getItem(PUBLIC_ALERT_NOTICE_KEY);
+                        if (lastSeenAlertId !== String(latestAlert.alertId)) {
+                            setPublicAlertNotice(latestAlert);
+                            sessionStorage.setItem(PUBLIC_ALERT_NOTICE_KEY, String(latestAlert.alertId));
+                        }
+                    }
+
+                    setMetrics([
+                        {label: "Active alerts", value: String(alerts.length), detail: "Public safety alerts currently visible to your account."},
+                        {label: "Role", value: role, detail: "Your current authenticated workspace role."}
                     ]);
                     return;
                 }
@@ -103,8 +132,6 @@ function Dashboard() {
                 ]);
             } catch (loadError) {
                 setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard data");
-            } finally {
-                setIsLoading(false);
             }
         };
 
@@ -127,14 +154,20 @@ function Dashboard() {
                 </div>
             </div>
 
+            {role === "PUBLIC" && publicAlertNotice ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-600">New public safety alert</p>
+                    <p className="mt-2 text-base font-semibold">{publicAlertNotice.message}</p>
+                    <p className="mt-2 text-sm">
+                        Severity: <span className="font-semibold">{formatEnumLabel(publicAlertNotice.severity)}</span> • Published {formatDateTime(publicAlertNotice.createdAt)}
+                    </p>
+                </div>
+            ) : null}
+
             {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
             <div className="grid gap-4 md:grid-cols-3">
-                {(isLoading ? [
-                    {label: "Loading", value: "…", detail: "Preparing dashboard metrics."},
-                    {label: "Loading", value: "…", detail: "Preparing dashboard metrics."},
-                    {label: "Loading", value: "…", detail: "Preparing dashboard metrics."}
-                ] : metrics).map((item) => (
+                {metrics.map((item) => (
                     <article className="rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-[0_16px_40px_rgba(15,23,42,0.07)]" key={`${item.label}-${item.detail}`}>
                         <p className="text-sm font-medium text-slate-500">{item.label}</p>
                         <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{item.value}</p>

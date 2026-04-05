@@ -16,11 +16,9 @@ import {
     tableContainerClassName,
     tableHeadCellClassName
 } from "../components/app/WorkspaceUi.tsx";
-import {getSessionUserId} from "../utils/auth-session.ts";
 import {formatDateTime, formatEnumLabel} from "../utils/display.ts";
 
 export default function ApprovalsPage() {
-    const reviewerUserId = getSessionUserId();
     const [requests, setRequests] = useState<RequestSummaryDto[]>([]);
     const [pendingUsers, setPendingUsers] = useState<UserSummaryDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -47,15 +45,10 @@ export default function ApprovalsPage() {
     }, []);
 
     const handleReview = async (requestId: number, status: "APPROVED" | "REJECTED") => {
-        if (!reviewerUserId) {
-            setError("Unable to determine the signed-in admin.");
-            return;
-        }
-
         try {
             setActiveRequestId(requestId);
             setError("");
-            await reviewRequest(requestId, {reviewerUserId, status});
+            await reviewRequest(requestId, {status});
             await loadPendingApprovals();
         } catch (reviewError) {
             setError(reviewError instanceof Error ? reviewError.message : "Failed to update request");

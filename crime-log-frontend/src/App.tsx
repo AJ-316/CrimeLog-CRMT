@@ -18,6 +18,9 @@ import LawyerHearingsPage from "./pages/LawyerHearingsPage.tsx";
 import AuditPage from "./pages/AuditPage.tsx";
 import PersonHistoryPage from "./pages/PersonHistoryPage.tsx";
 import CreatePersonPage from "./pages/CreatePersonPage.tsx";
+import AlertsPage from "./pages/AlertsPage.tsx";
+import CrimeReportsPage from "./pages/CrimeReportsPage.tsx";
+import CrimeReportDetailsPage from "./pages/CrimeReportDetailsPage.tsx";
 
 function App() {
     return (
@@ -42,6 +45,9 @@ function App() {
                         <Route path="hearings" element={<LawyerHearingsPage />} />
                         <Route path="people" element={<PersonHistoryPage />} />
                         <Route path="persons/new" element={<CreatePersonPage />} />
+                        <Route path="alerts" element={<AlertsPage />} />
+                        <Route path="reports" element={<CrimeReportsPage />} />
+                        <Route path="reports/:reportId" element={<CrimeReportDetailsPage />} />
                         <Route path="audit" element={<AuditPage />} />
                     </Route>
                 </Route>

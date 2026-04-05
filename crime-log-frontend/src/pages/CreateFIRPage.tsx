@@ -96,13 +96,13 @@ export default function CreateFIRPage() {
         <section className="space-y-6">
             <PageHeader
                 actions={<Link className={secondaryButtonClassName} to="/app/fir">Back to FIRs</Link>}
-                description="Register a new FIR with the reporting details, accused information, incident place, and the unit that should investigate first."
+                description="Register a basic FIR quickly, then add more details later if needed."
                 eyebrow="Officer FIR Module"
                 title="Create FIR"
             />
 
             <form className="space-y-6" onSubmit={handleSubmit}>
-                <SectionCard description="Record the main FIR metadata before adding accused and incident details." title="FIR registration">
+                <SectionCard description="Record only the core FIR details needed to create the entry." title="Basic FIR details">
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <WorkspaceFormField field="firNumber" label="FIR number" required update={updateField} value={form.firNumber} />
                         <label className="block text-sm font-medium text-slate-700">
@@ -114,6 +114,7 @@ export default function CreateFIRPage() {
                             </select>
                         </label>
                         <WorkspaceFormField field="registrationDateTime" label="Registration date and time" required type="datetime-local" update={updateField} value={form.registrationDateTime} />
+                        <WorkspaceFormField field="incidentDateTime" label="Incident date and time" required type="datetime-local" update={updateField} value={form.incidentDateTime} />
                         <label className="block text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
                             Initial investigating unit
                             <select className={inputClassName} onChange={(event) => updateField("initialInvestigatingUnitId", Number(event.target.value))} value={form.initialInvestigatingUnitId || ""}>
@@ -123,42 +124,36 @@ export default function CreateFIRPage() {
                                 ))}
                             </select>
                         </label>
+                        <label className="block text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
+                            Incident description
+                            <textarea className={textareaClassName} onChange={(event) => updateField("incidentDescription", event.target.value)} placeholder="Briefly describe what happened" required value={form.incidentDescription} />
+                        </label>
                     </div>
                 </SectionCard>
 
-                <SectionCard description="Capture the accused identity and address visible on this FIR." title="Accused details">
+                <SectionCard description="These fields are optional for basic FIR filing and can be filled when information is available." title="Additional details (optional)">
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <WorkspaceFormField field="accusedFirstName" label="First name" required update={updateField} value={form.accusedFirstName} />
+                        <WorkspaceFormField field="accusedFirstName" label="Accused first name" update={updateField} value={form.accusedFirstName} />
                         <WorkspaceFormField field="accusedMiddleName" label="Middle name" update={updateField} value={form.accusedMiddleName} />
-                        <WorkspaceFormField field="accusedLastName" label="Last name" required update={updateField} value={form.accusedLastName} />
-                        <WorkspaceFormField field="accusedContact" label="Contact number" required update={updateField} value={form.accusedContact} />
+                        <WorkspaceFormField field="accusedLastName" label="Accused last name" update={updateField} value={form.accusedLastName} />
+                        <WorkspaceFormField field="accusedContact" label="Accused contact number" update={updateField} value={form.accusedContact} />
                     </div>
                     <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {(["street", "city", "state", "postalCode", "countryCode"] as const).map((field) => (
                             <label className="block text-sm font-medium text-slate-700" key={field}>
-                                {field === "postalCode" ? "Postal code" : field === "countryCode" ? "Country code" : field.charAt(0).toUpperCase() + field.slice(1)}
+                                {field === "postalCode" ? "Accused postal code" : field === "countryCode" ? "Accused country code" : `Accused ${field.charAt(0).toUpperCase() + field.slice(1)}`}
                                 <input className={inputClassName} onChange={(event) => updateAddress("accusedAddress", field, event.target.value)} value={form.accusedAddress[field]} />
                             </label>
                         ))}
                     </div>
-                </SectionCard>
-
-                <SectionCard description="Describe when the incident happened, where it took place, and what was reported." title="Incident details">
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <WorkspaceFormField field="incidentDateTime" label="Incident date and time" required type="datetime-local" update={updateField} value={form.incidentDateTime} />
-                    </div>
                     <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {(["street", "city", "state", "postalCode", "countryCode"] as const).map((field) => (
                             <label className="block text-sm font-medium text-slate-700" key={field}>
-                                {field === "postalCode" ? "Postal code" : field === "countryCode" ? "Country code" : field.charAt(0).toUpperCase() + field.slice(1)}
+                                {field === "postalCode" ? "Incident postal code" : field === "countryCode" ? "Incident country code" : `Incident ${field.charAt(0).toUpperCase() + field.slice(1)}`}
                                 <input className={inputClassName} onChange={(event) => updateAddress("incidentPlace", field, event.target.value)} value={form.incidentPlace[field]} />
                             </label>
                         ))}
                     </div>
-                    <label className="mt-5 block text-sm font-medium text-slate-700">
-                        Incident description
-                        <textarea className={textareaClassName} onChange={(event) => updateField("incidentDescription", event.target.value)} value={form.incidentDescription} />
-                    </label>
                 </SectionCard>
 
                 {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}

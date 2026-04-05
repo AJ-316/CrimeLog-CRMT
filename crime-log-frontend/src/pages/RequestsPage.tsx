@@ -67,7 +67,7 @@ export default function RequestsPage() {
                 getCases(),
                 getDepartmentUnits(),
                 getAgencies(),
-                getMyRequests(userId)
+                getMyRequests()
             ]);
             setCases(caseResults);
             setUnits(unitResults);
@@ -90,13 +90,11 @@ export default function RequestsPage() {
         }
 
         const baseRequest = {
-            requestedByUserId: userId,
             caseId: form.caseId,
             firId: selectedCase.firId,
             status: "PENDING" as const,
             reason: form.reason,
-            reviewedAt: null,
-            reviewedByUserId: null
+            reviewedAt: null
         };
 
         switch (form.requestType) {

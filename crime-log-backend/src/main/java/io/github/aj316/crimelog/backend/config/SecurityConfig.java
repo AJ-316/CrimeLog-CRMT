@@ -10,8 +10,10 @@ import io.github.aj316.crimelog.backend.repository.UserRepository;
 import io.github.aj316.crimelog.backend.service.jwt.CustomAuthEntryPoint;
 import io.github.aj316.crimelog.backend.service.jwt.JwtAuthenticationFilter;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -79,11 +81,17 @@ public class SecurityConfig {
     @Bean
     CommandLineRunner seedAdmin(UserRepository userRepo,
                                 PersonRepository personRepo,
-                                PasswordEncoder encoder) {
+                                PasswordEncoder encoder,
+                                @Value("${app.bootstrap.admin-email:}") String adminEmail,
+                                @Value("${app.bootstrap.admin-password:}") String adminPassword) {
 
         return args -> {
 
-            if (!userRepo.existsByEmail("admin@crimelog.com")) {
+            if (!StringUtils.hasText(adminEmail) || !StringUtils.hasText(adminPassword)) {
+                return;
+            }
+
+            if (!userRepo.existsByEmail(adminEmail)) {
 
                 Person person = new Person();
                 person.setFirstName("System");
@@ -99,8 +107,8 @@ public class SecurityConfig {
 
                 User admin = new User();
                 admin.setPerson(person);   // IMPORTANT
-                admin.setEmail("admin@crimelog.com");
-                admin.setPassword(encoder.encode("admin123"));
+                admin.setEmail(adminEmail);
+                admin.setPassword(encoder.encode(adminPassword));
                 admin.setRole(Role.ADMIN);
                 admin.setAccountStatus(Status.APPROVED);
                 userRepo.save(admin);
