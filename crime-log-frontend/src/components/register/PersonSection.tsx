@@ -124,6 +124,7 @@ export default function PersonSection({
                     error={errors["personDto.contactPrimary"]}
                     id="contactPrimary"
                     label="Primary contact"
+                    description="Use international format like +919876543210."
                     onChange={(value) => onPersonChange("contactPrimary", value)}
                     required
                     value={person.contactPrimary}
@@ -132,8 +133,9 @@ export default function PersonSection({
                     error={errors["personDto.contactSecondary"]}
                     id="contactSecondary"
                     label="Secondary contact"
+                    description="Optional. If you add one, use international format like +919876543210."
                     onChange={(value) => onPersonChange("contactSecondary", value)}
-                    value={person.contactSecondary}
+                    value={person.contactSecondary ?? ""}
                 />
             </div>
 

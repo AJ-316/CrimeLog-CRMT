@@ -4,6 +4,7 @@ export interface CaseSummaryDto {
     caseId: number;
     caseNumber: string;
     caseStage: CaseStage;
+    courtId: number | null;
     courtName: string | null;
     openedOn: string | null;
     closedOn: string | null;
@@ -39,6 +40,7 @@ export interface CaseDetailDto {
     caseId: number;
     caseNumber: string;
     caseStage: CaseStage;
+    courtId: number | null;
     courtName: string | null;
     openedOn: string | null;
     closedOn: string | null;
@@ -71,5 +73,9 @@ export interface CaseStageUpdateRequest {
 
 export interface InvestigatingUnitUpdateRequest {
     departmentUnitId: number;
+}
+
+export interface CourtUpdateRequest {
+    courtId: number | null;
 }
 

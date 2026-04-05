@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import {useOutletContext} from "react-router-dom";
+import {Link, useOutletContext} from "react-router-dom";
 import type {PersonCriminalHistoryDto} from "../api/dtos/person-history.ts";
 import type {PersonOptionDto} from "../api/dtos/reference.ts";
 import {getPersonHistory} from "../api/services/person-services.ts";
@@ -15,7 +15,8 @@ import {
     tableCellClassName,
     tableClassName,
     tableContainerClassName,
-    tableHeadCellClassName
+    tableHeadCellClassName,
+    primaryButtonClassName
 } from "../components/app/WorkspaceUi.tsx";
 import {formatDate, formatEnumLabel, formatParticipantRole} from "../utils/display.ts";
 
@@ -81,6 +82,7 @@ export default function PersonHistoryPage() {
     return (
         <section className="space-y-6">
             <PageHeader
+                actions={role === "ADMIN" || role === "OFFICER" ? <Link className={primaryButtonClassName} to="/app/persons/new">Add person</Link> : undefined}
                 description="Track criminal records by person, switch between all involvements and suspect-only history, and inspect linked cases."
                 eyebrow={role === "LAWYER" ? "Client history" : "Criminal records"}
                 title="Person history"

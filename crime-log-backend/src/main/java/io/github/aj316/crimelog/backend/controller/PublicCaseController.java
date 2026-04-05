@@ -1,7 +1,6 @@
 package io.github.aj316.crimelog.backend.controller;
 
 import io.github.aj316.crimelog.backend.dto.ApiResponse;
-import io.github.aj316.crimelog.backend.dto.cases.CaseSummaryDto;
 import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.repository.FirRepository;
 import org.springframework.http.ResponseEntity;

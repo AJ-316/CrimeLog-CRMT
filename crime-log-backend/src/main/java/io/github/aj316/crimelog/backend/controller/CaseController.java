@@ -78,6 +78,18 @@ public class CaseController {
         ));
     }
 
+        @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+        @PatchMapping("/{caseId:\\d+}/court")
+        public ResponseEntity<ApiResponse<CaseSummaryDto>> updateCourt(
+            @PathVariable Long caseId,
+            @RequestBody CourtUpdateRequest request
+        ) {
+        return ResponseEntity.ok(ApiResponse.success(
+            caseService.updateCourt(caseId, request.courtId()),
+            "Court updated successfully"
+        ));
+        }
+
     @GetMapping("/{caseId:\\d+}/persons")
     public ResponseEntity<ApiResponse<List<CaseParticipantDto>>> getCaseParticipants(@PathVariable Long caseId) {
         return ResponseEntity.ok(ApiResponse.success(caseService.getCaseParticipants(caseId), "Case participants retrieved successfully"));

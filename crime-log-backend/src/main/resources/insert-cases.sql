@@ -1,0 +1,10 @@
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00002', 'INVESTIGATION', 3, 1, '2026-03-02');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00003', 'INVESTIGATION', 4, 2, '2026-03-04');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00004', 'TRIAL', 5, 3, '2026-02-01');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00005', 'INVESTIGATION', 6, 4, '2026-03-17');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00006', 'INVESTIGATION', 7, 5, '2026-03-07');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00007', 'CLOSED', 8, 1, '2025-12-02');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00008', 'INVESTIGATION', 9, 2, '2026-03-22');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00009', 'TRIAL', 10, 3, '2026-02-14');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00010', 'INVESTIGATION', 11, 4, '2026-03-12');
+INSERT INTO cases (case_number, stage, fir_id, current_investigating_unit_id, opened_on) VALUES ('CASE/2026/00011', 'APPEAL', 12, 5, '2025-11-02');

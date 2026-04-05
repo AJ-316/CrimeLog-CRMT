@@ -7,6 +7,11 @@ export interface DepartmentUnitOptionDto {
     agencyName: string;
 }
 
+export interface CourtOptionDto {
+    id: number;
+    name: string;
+}
+
 export interface AgencyOptionDto {
     id: number;
     name: string;

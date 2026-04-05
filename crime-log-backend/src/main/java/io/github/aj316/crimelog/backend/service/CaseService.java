@@ -1,13 +1,17 @@
 package io.github.aj316.crimelog.backend.service;
 
 import io.github.aj316.crimelog.backend.dto.cases.*;
+import io.github.aj316.crimelog.backend.model.Request;
 import io.github.aj316.crimelog.backend.model.cases.Case;
 import io.github.aj316.crimelog.backend.model.cases.CaseLawyer;
 import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.model.cases.parties.CasePerson;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.people.Person;
+import io.github.aj316.crimelog.backend.model.institutes.Court;
 import io.github.aj316.crimelog.backend.model.types.CaseStage;
+import io.github.aj316.crimelog.backend.model.types.RequestType;
+import io.github.aj316.crimelog.backend.model.types.Status;
 import io.github.aj316.crimelog.backend.repository.*;
 import org.springframework.stereotype.Service;
 
@@ -27,14 +31,18 @@ public class CaseService {
     private final CasePersonRepository casePersonRepository;
     private final PersonRepository personRepository;
     private final CaseLawyerRepository caseLawyerRepository;
+    private final RequestRepository requestRepository;
+    private final CourtRepository courtRepository;
 
-    public CaseService(CaseRepository caseRepository, FirRepository firRepository, DepartmentUnitRepository departmentUnitRepository, CasePersonRepository casePersonRepository, PersonRepository personRepository, CaseLawyerRepository caseLawyerRepository) {
+    public CaseService(CaseRepository caseRepository, FirRepository firRepository, DepartmentUnitRepository departmentUnitRepository, CasePersonRepository casePersonRepository, PersonRepository personRepository, CaseLawyerRepository caseLawyerRepository, RequestRepository requestRepository, CourtRepository courtRepository) {
         this.caseRepository = caseRepository;
         this.firRepository = firRepository;
         this.departmentUnitRepository = departmentUnitRepository;
         this.casePersonRepository = casePersonRepository;
         this.personRepository = personRepository;
         this.caseLawyerRepository = caseLawyerRepository;
+        this.requestRepository = requestRepository;
+        this.courtRepository = courtRepository;
     }
 
     public List<BasicCaseDetailDto> getBasicCaseDetails() {
@@ -136,6 +144,22 @@ public class CaseService {
         return toSummary(caseRepository.save(caseEntity));
     }
 
+    public CaseSummaryDto updateCourt(Long caseId, Long courtId) {
+        Case caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new NoSuchElementException("Case not found"));
+
+        if (courtId == null) {
+            caseEntity.setCourt(null);
+            return toSummary(caseRepository.save(caseEntity));
+        }
+
+        Court court = courtRepository.findById(courtId)
+                .orElseThrow(() -> new NoSuchElementException("Court not found"));
+
+        caseEntity.setCourt(court);
+        return toSummary(caseRepository.save(caseEntity));
+    }
+
     public List<CaseParticipantDto> getCaseParticipants(Long caseId) {
         if (!caseRepository.existsById(caseId)) {
             throw new NoSuchElementException("Case not found");
@@ -177,7 +201,20 @@ public class CaseService {
             orderedCases.putIfAbsent(caseEntity.getCaseId(), toSummary(caseEntity));
         }
 
+        for (Request request : caseLawyerFallbackRequests(lawyerUserId)) {
+            caseRepository.findById(request.getCaseId())
+                    .ifPresent(caseEntity -> orderedCases.putIfAbsent(caseEntity.getCaseId(), toSummary(caseEntity)));
+        }
+
         return List.copyOf(orderedCases.values());
+    }
+
+    private List<Request> caseLawyerFallbackRequests(Long lawyerUserId) {
+        return requestRepository.findByRequestedByUserIdAndRequestTypeAndStatusOrderByCreatedAtDesc(
+                lawyerUserId,
+                RequestType.LAWYER_CASE_REQUEST,
+                Status.APPROVED
+        );
     }
 
     private CaseSummaryDto toSummary(Case caseEntity) {
@@ -185,6 +222,7 @@ public class CaseService {
                 caseEntity.getCaseId(),
                 caseEntity.getCaseNumber(),
                 caseEntity.getStage(),
+                caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtId() : null,
                 caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtName() : null,
                 caseEntity.getOpenedOn(),
                 caseEntity.getClosedOn(),
@@ -217,6 +255,7 @@ public class CaseService {
                 caseEntity.getCaseId(),
                 caseEntity.getCaseNumber(),
                 caseEntity.getStage(),
+            caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtId() : null,
                 caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtName() : null,
                 caseEntity.getOpenedOn(),
                 caseEntity.getClosedOn(),

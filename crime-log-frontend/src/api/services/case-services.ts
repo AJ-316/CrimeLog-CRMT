@@ -7,6 +7,7 @@ import type {
     CaseParticipantDto,
     CaseSearchParams,
     CaseStageUpdateRequest,
+    CourtUpdateRequest,
     CaseSummaryDto,
     CreateCaseRequest,
     InvestigatingUnitUpdateRequest
@@ -69,6 +70,15 @@ export const updateCaseInvestigatingUnit = async (caseId: number, request: Inves
         return requireApiData(res.data, "Failed to update investigating unit");
     } catch (error) {
         throw new Error(getApiErrorMessage(error, "Failed to update investigating unit"));
+    }
+};
+
+export const updateCaseCourt = async (caseId: number, request: CourtUpdateRequest): Promise<CaseSummaryDto> => {
+    try {
+        const res = await api.patch<ApiResponse<CaseSummaryDto>>(`/cases/${caseId}/court`, request);
+        return requireApiData(res.data, "Failed to update court");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to update court"));
     }
 };
 

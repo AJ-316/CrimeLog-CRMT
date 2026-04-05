@@ -3,7 +3,6 @@ package io.github.aj316.crimelog.backend.controller;
 import io.github.aj316.crimelog.backend.dto.ApiResponse;
 import io.github.aj316.crimelog.backend.dto.UserDto;
 import io.github.aj316.crimelog.backend.model.people.Person;
-import io.github.aj316.crimelog.backend.repository.OfficerProfileRepository;
 import io.github.aj316.crimelog.backend.repository.PersonRepository;
 import io.github.aj316.crimelog.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +18,10 @@ public class TestController {
 
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
-    private final OfficerProfileRepository officerProfileRepository;
 
-    public TestController(UserRepository userRepository, PersonRepository personRepository, OfficerProfileRepository officerProfileRepository) {
+    public TestController(UserRepository userRepository, PersonRepository personRepository) {
         this.userRepository = userRepository;
         this.personRepository = personRepository;
-        this.officerProfileRepository = officerProfileRepository;
     }
 
     @PreAuthorize("hasRole('ADMIN')")

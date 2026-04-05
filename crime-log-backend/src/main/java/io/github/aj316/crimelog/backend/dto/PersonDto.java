@@ -35,7 +35,7 @@ public record PersonDto(
         person.setPermanentAddress(permanentAddress.mapToEntity());
         person.setCurrentAddress(currentAddress.mapToEntity());
         person.setContactPrimary(contactPrimary);
-        person.setContactSecondary(contactSecondary);
+        person.setContactSecondary(contactSecondary == null || contactSecondary.isBlank() ? null : contactSecondary.trim());
         return person;
     }
 

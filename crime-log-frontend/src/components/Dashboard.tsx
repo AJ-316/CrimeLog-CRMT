@@ -5,6 +5,7 @@ import type {AppOutletContext} from "./app/AppShell.tsx";
 import {getFirs} from "../api/services/fir-services.ts";
 import {getAssignedCases, getCases} from "../api/services/case-services.ts";
 import {getMyRequests, getPendingRequests} from "../api/services/request-services.ts";
+import {getPendingUsers} from "../api/services/user-services.ts";
 import {getSessionUserId} from "../utils/auth-session.ts";
 import {primaryButtonClassName, secondaryButtonClassName} from "./app/WorkspaceUi.tsx";
 
@@ -31,6 +32,7 @@ const roleNarrative: Record<Role, string> = {
 const quickLinksByRole: Record<Role, QuickLink[]> = {
     ADMIN: [
         {label: "Open approvals", description: "Review the pending request queue.", to: "/app/approvals", primary: true},
+        {label: "Add person", description: "Register a new person record.", to: "/app/persons/new"},
         {label: "View audit", description: "See current operational totals.", to: "/app/audit"}
     ],
     LAWYER: [
@@ -41,6 +43,7 @@ const quickLinksByRole: Record<Role, QuickLink[]> = {
     OFFICER: [
         {label: "Create FIR", description: "Register a new first information report.", to: "/app/fir/new", primary: true},
         {label: "View cases", description: "Review investigation files and participants.", to: "/app/cases"},
+        {label: "Add person", description: "Register a new person record.", to: "/app/persons/new"},
         {label: "Submit request", description: "Send transfer or charge-sheet requests.", to: "/app/requests"}
     ],
     PUBLIC: []
@@ -72,9 +75,10 @@ function Dashboard() {
                 }
 
                 if (role === "ADMIN") {
-                    const [pendingRequests, cases, firs] = await Promise.all([getPendingRequests(), getCases(), getFirs()]);
+                    const [pendingRequests, pendingUsers, cases, firs] = await Promise.all([getPendingRequests(), getPendingUsers(), getCases(), getFirs()]);
                     setMetrics([
                         {label: "Pending approvals", value: String(pendingRequests.length), detail: "Requests awaiting an administrator decision."},
+                        {label: "Pending people", value: String(pendingUsers.length), detail: "New accounts waiting for admin approval."},
                         {label: "Total cases", value: String(cases.length), detail: "Case records currently active in the workspace."},
                         {label: "Total FIRs", value: String(firs.length), detail: "FIR records presently available for review."}
                     ]);

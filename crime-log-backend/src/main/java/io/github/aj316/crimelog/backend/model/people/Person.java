@@ -83,7 +83,7 @@ public class Person {
     @Column(length = 15, nullable = false)
     private String contactPrimary;
 
-    @Pattern(regexp = INTERNATIONAL_NUMBER_REGEX)
-    @Column(length = 15, nullable = false)
+        @Pattern(regexp = INTERNATIONAL_NUMBER_REGEX)
+        @Column(length = 15, nullable = true)
     private String contactSecondary;
 }

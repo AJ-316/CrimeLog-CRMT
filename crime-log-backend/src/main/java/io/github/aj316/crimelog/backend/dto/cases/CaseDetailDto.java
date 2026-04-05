@@ -9,6 +9,7 @@ public record CaseDetailDto(
         Long caseId,
         String caseNumber,
         CaseStage caseStage,
+        Long courtId,
         String courtName,
         LocalDate openedOn,
         LocalDate closedOn,

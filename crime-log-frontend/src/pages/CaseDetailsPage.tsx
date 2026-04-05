@@ -1,9 +1,9 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
 import {Link, useOutletContext, useParams} from "react-router-dom";
 import type {CaseDetailDto, CaseParticipantCreateRequest, CaseStageUpdateRequest} from "../api/dtos/case.ts";
-import type {DepartmentUnitOptionDto, PersonOptionDto} from "../api/dtos/reference.ts";
-import {addCaseParticipant, getCaseDetails, updateCaseInvestigatingUnit, updateCaseStage} from "../api/services/case-services.ts";
-import {getDepartmentUnits, getPeople} from "../api/services/reference-services.ts";
+import type {DepartmentUnitOptionDto, CourtOptionDto, PersonOptionDto} from "../api/dtos/reference.ts";
+import {addCaseParticipant, getCaseDetails, updateCaseCourt, updateCaseInvestigatingUnit, updateCaseStage} from "../api/services/case-services.ts";
+import {getCourts, getDepartmentUnits, getPeople} from "../api/services/reference-services.ts";
 import type {CaseStage} from "../api/types.ts";
 import {CaseParticipantTypeOptions, CaseStageOptions} from "../api/types.ts";
 import type {AppOutletContext} from "../components/app/AppShell.tsx";
@@ -30,8 +30,10 @@ export default function CaseDetailsPage() {
     const [caseDetail, setCaseDetail] = useState<CaseDetailDto | null>(null);
     const [people, setPeople] = useState<PersonOptionDto[]>([]);
     const [departmentUnits, setDepartmentUnits] = useState<DepartmentUnitOptionDto[]>([]);
+    const [courts, setCourts] = useState<CourtOptionDto[]>([]);
     const [selectedStage, setSelectedStage] = useState<CaseStage>("INVESTIGATION");
     const [selectedUnitId, setSelectedUnitId] = useState("");
+    const [selectedCourtId, setSelectedCourtId] = useState("");
     const [isUpdatingCase, setIsUpdatingCase] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
@@ -43,6 +45,7 @@ export default function CaseDetailsPage() {
         const details = await getCaseDetails(id);
         setCaseDetail(details);
         setSelectedStage(details.caseStage);
+        setSelectedCourtId(details.courtId ? String(details.courtId) : "");
     };
 
     useEffect(() => {
@@ -57,13 +60,15 @@ export default function CaseDetailsPage() {
             try {
                 setIsLoading(true);
                 setError("");
-                const [details, peopleOptions, units] = await Promise.all([getCaseDetails(id), getPeople(), getDepartmentUnits()]);
+                const [details, peopleOptions, units, courtOptions] = await Promise.all([getCaseDetails(id), getPeople(), getDepartmentUnits(), getCourts()]);
                 setCaseDetail(details);
                 setPeople(peopleOptions);
                 setDepartmentUnits(units);
+                setCourts(courtOptions);
                 setSelectedStage(details.caseStage);
                 const selectedUnit = units.find((unit) => unit.name === details.currentInvestigatingUnitName);
                 setSelectedUnitId(selectedUnit ? String(selectedUnit.id) : "");
+                setSelectedCourtId(details.courtId ? String(details.courtId) : "");
             } catch (loadError) {
                 setError(loadError instanceof Error ? loadError.message : "Failed to load case details");
             } finally {
@@ -115,6 +120,8 @@ export default function CaseDetailsPage() {
                 await updateCaseInvestigatingUnit(id, {departmentUnitId: Number(selectedUnitId)});
             }
 
+            await updateCaseCourt(id, {courtId: selectedCourtId ? Number(selectedCourtId) : null});
+
             await loadCase(id);
         } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : "Failed to update case details");
@@ -164,7 +171,7 @@ export default function CaseDetailsPage() {
                         </div>
 
                         {role === "OFFICER" || role === "ADMIN" ? (
-                            <form className="mt-5 grid gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 md:grid-cols-3" onSubmit={handleCaseUpdateSubmit}>
+                            <form className="mt-5 grid gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 md:grid-cols-4" onSubmit={handleCaseUpdateSubmit}>
                                 <label className="block text-sm font-medium text-slate-700">
                                     Case stage
                                     <select className={inputClassName} onChange={(event) => setSelectedStage(event.target.value as CaseStage)} value={selectedStage}>
@@ -182,9 +189,18 @@ export default function CaseDetailsPage() {
                                         ))}
                                     </select>
                                 </label>
-                                <div className="md:col-span-3">
+                                <label className="block text-sm font-medium text-slate-700">
+                                    Court
+                                    <select className={inputClassName} onChange={(event) => setSelectedCourtId(event.target.value)} value={selectedCourtId}>
+                                        <option value="">Not assigned</option>
+                                        {courts.map((court) => (
+                                            <option key={court.id} value={court.id}>{court.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <div className="md:col-span-4">
                                     <button className={primaryButtonClassName} disabled={isUpdatingCase} type="submit">
-                                        {isUpdatingCase ? "Saving updates" : "Update case status and unit"}
+                                        {isUpdatingCase ? "Saving updates" : "Update case status, unit, and court"}
                                     </button>
                                 </div>
                             </form>
