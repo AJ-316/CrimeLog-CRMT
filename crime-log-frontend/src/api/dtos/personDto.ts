@@ -14,5 +14,5 @@ export interface PersonDto {
     permanentAddress: AddressDto,
     currentAddress: AddressDto,
     contactPrimary: string,
-    contactSecondary: string
+    contactSecondary: string | null
 }

@@ -1,15 +1,21 @@
 package io.github.aj316.crimelog.backend.service;
 
 import io.github.aj316.crimelog.backend.dto.cases.*;
+import io.github.aj316.crimelog.backend.model.Request;
 import io.github.aj316.crimelog.backend.model.cases.Case;
 import io.github.aj316.crimelog.backend.model.cases.CaseLawyer;
 import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.model.cases.parties.CasePerson;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.people.Person;
+import io.github.aj316.crimelog.backend.model.institutes.Court;
+import io.github.aj316.crimelog.backend.model.types.CaseStage;
+import io.github.aj316.crimelog.backend.model.types.RequestType;
+import io.github.aj316.crimelog.backend.model.types.Status;
 import io.github.aj316.crimelog.backend.repository.*;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -25,14 +31,18 @@ public class CaseService {
     private final CasePersonRepository casePersonRepository;
     private final PersonRepository personRepository;
     private final CaseLawyerRepository caseLawyerRepository;
+    private final RequestRepository requestRepository;
+    private final CourtRepository courtRepository;
 
-    public CaseService(CaseRepository caseRepository, FirRepository firRepository, DepartmentUnitRepository departmentUnitRepository, CasePersonRepository casePersonRepository, PersonRepository personRepository, CaseLawyerRepository caseLawyerRepository) {
+    public CaseService(CaseRepository caseRepository, FirRepository firRepository, DepartmentUnitRepository departmentUnitRepository, CasePersonRepository casePersonRepository, PersonRepository personRepository, CaseLawyerRepository caseLawyerRepository, RequestRepository requestRepository, CourtRepository courtRepository) {
         this.caseRepository = caseRepository;
         this.firRepository = firRepository;
         this.departmentUnitRepository = departmentUnitRepository;
         this.casePersonRepository = casePersonRepository;
         this.personRepository = personRepository;
         this.caseLawyerRepository = caseLawyerRepository;
+        this.requestRepository = requestRepository;
+        this.courtRepository = courtRepository;
     }
 
     public List<BasicCaseDetailDto> getBasicCaseDetails() {
@@ -41,6 +51,24 @@ public class CaseService {
 
     public List<CaseSummaryDto> getCaseSummaries() {
         return caseRepository.findAllByOrderByOpenedOnDesc().stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
+    public List<CaseSummaryDto> searchCases(CaseStage stage, Long investigatingUnitId, String caseNumber) {
+        Stream<Case> caseStream;
+
+        if (stage != null) {
+            caseStream = caseRepository.findByStageOrderByOpenedOnDesc(stage).stream();
+        } else if (investigatingUnitId != null) {
+            caseStream = caseRepository.findByCurrentInvestigatingUnit_IdOrderByOpenedOnDesc(investigatingUnitId).stream();
+        } else {
+            caseStream = caseRepository.findAllByOrderByOpenedOnDesc().stream();
+        }
+
+        return caseStream
+                .filter(caseEntity -> caseNumber == null || caseNumber.isBlank() ||
+                        caseEntity.getCaseNumber().toLowerCase().contains(caseNumber.trim().toLowerCase()))
                 .map(this::toSummary)
                 .toList();
     }
@@ -79,6 +107,56 @@ public class CaseService {
         caseEntity.setFir(fir);
         caseEntity.setCurrentInvestigatingUnit(investigatingUnit);
 
+        return toSummary(caseRepository.save(caseEntity));
+    }
+
+    public CaseSummaryDto updateCaseStage(Long caseId, CaseStage stage, LocalDate closedOn) {
+        if (stage == null) {
+            throw new IllegalArgumentException("Case stage is required");
+        }
+
+        Case caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new NoSuchElementException("Case not found"));
+
+        caseEntity.setStage(stage);
+
+        if (stage == CaseStage.CLOSED) {
+            caseEntity.setClosedOn(closedOn != null ? closedOn : LocalDate.now());
+        } else if (closedOn != null) {
+            caseEntity.setClosedOn(closedOn);
+        }
+
+        return toSummary(caseRepository.save(caseEntity));
+    }
+
+    public CaseSummaryDto updateInvestigatingUnit(Long caseId, Long departmentUnitId) {
+        if (departmentUnitId == null) {
+            throw new IllegalArgumentException("departmentUnitId is required");
+        }
+
+        Case caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new NoSuchElementException("Case not found"));
+
+        DepartmentUnit departmentUnit = departmentUnitRepository.findById(departmentUnitId)
+                .orElseThrow(() -> new NoSuchElementException("Department unit not found"));
+
+        caseEntity.setCurrentInvestigatingUnit(departmentUnit);
+        return toSummary(caseRepository.save(caseEntity));
+    }
+
+    public CaseSummaryDto updateCourt(Long caseId, Long courtId) {
+        Case caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new NoSuchElementException("Case not found"));
+
+        if (courtId == null) {
+            caseEntity.setCourt(null);
+            return toSummary(caseRepository.save(caseEntity));
+        }
+
+        Court court = courtRepository.findById(courtId)
+                .orElseThrow(() -> new NoSuchElementException("Court not found"));
+
+        caseEntity.setCourt(court);
         return toSummary(caseRepository.save(caseEntity));
     }
 
@@ -123,7 +201,20 @@ public class CaseService {
             orderedCases.putIfAbsent(caseEntity.getCaseId(), toSummary(caseEntity));
         }
 
+        for (Request request : caseLawyerFallbackRequests(lawyerUserId)) {
+            caseRepository.findById(request.getCaseId())
+                    .ifPresent(caseEntity -> orderedCases.putIfAbsent(caseEntity.getCaseId(), toSummary(caseEntity)));
+        }
+
         return List.copyOf(orderedCases.values());
+    }
+
+    private List<Request> caseLawyerFallbackRequests(Long lawyerUserId) {
+        return requestRepository.findByRequestedByUserIdAndRequestTypeAndStatusOrderByCreatedAtDesc(
+                lawyerUserId,
+                RequestType.LAWYER_CASE_REQUEST,
+                Status.APPROVED
+        );
     }
 
     private CaseSummaryDto toSummary(Case caseEntity) {
@@ -131,6 +222,7 @@ public class CaseService {
                 caseEntity.getCaseId(),
                 caseEntity.getCaseNumber(),
                 caseEntity.getStage(),
+                caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtId() : null,
                 caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtName() : null,
                 caseEntity.getOpenedOn(),
                 caseEntity.getClosedOn(),
@@ -164,6 +256,7 @@ public class CaseService {
                 caseEntity.getCaseId(),
                 caseEntity.getCaseNumber(),
                 caseEntity.getStage(),
+            caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtId() : null,
                 caseEntity.getCourt() != null ? caseEntity.getCourt().getCourtName() : null,
                 caseEntity.getOpenedOn(),
                 caseEntity.getClosedOn(),

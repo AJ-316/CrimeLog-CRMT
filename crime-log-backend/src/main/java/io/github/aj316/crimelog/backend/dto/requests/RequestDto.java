@@ -1,7 +1,9 @@
 package io.github.aj316.crimelog.backend.dto.requests;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.aj316.crimelog.backend.dto.MapDto;
 import io.github.aj316.crimelog.backend.model.Request;
 import io.github.aj316.crimelog.backend.model.types.RequestType;
@@ -9,15 +11,16 @@ import io.github.aj316.crimelog.backend.model.types.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import tools.jackson.databind.ObjectMapper;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "requestType"
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "requestType",
+        visible = true
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = RequestDto.class, name = "SUBMIT_CHARGE_SHEET"),
@@ -26,20 +29,22 @@ import java.util.Map;
         @JsonSubTypes.Type(value = TransferUnitRequestDto.class, name = "TRANSFER_UNIT")
 })
 @Getter
+@Setter
 @NoArgsConstructor(force = true)
 @AllArgsConstructor
 public class RequestDto implements MapDto<Request> {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final RequestType requestType;
-    private final Long requestedByUserId;
-    private final Long caseId;
-    private final Long firId;
-    private final Status status;
-    private final String reason;
-    private final LocalDateTime reviewedAt;
-    private final Long reviewedByUserId;
+    @JsonProperty("requestType")
+    private RequestType requestType;
+    private Long requestedByUserId;
+    private Long caseId;
+    private Long firId;
+    private Status status;
+    private String reason;
+    private LocalDateTime reviewedAt;
+    private Long reviewedByUserId;
 
     public Request mapToEntity() {
         Request request = new Request();
@@ -59,7 +64,11 @@ public class RequestDto implements MapDto<Request> {
         Map<String, Object> map = getPayload();
         if(map.isEmpty()) return "{}";
 
-        return objectMapper.writeValueAsString(map);
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return "{}";
+        }
     }
 
     protected Map<String, Object> getPayload() {

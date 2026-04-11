@@ -4,6 +4,7 @@ import type {RegisterFormDraft} from "./register-types.ts";
 export type ValidationErrors = Record<string, string>;
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phonePattern = /^\+?[1-9]\d{1,14}$/;
 
 const isBlank = (value: string): boolean => value.trim().length === 0;
 
@@ -37,6 +38,28 @@ const addNonNegativeInteger = (errors: ValidationErrors, key: string, label: str
     }
 };
 
+const addPhoneNumber = (
+    errors: ValidationErrors,
+    key: string,
+    label: string,
+    value: string | null | undefined,
+    required: boolean
+): void => {
+    const normalized = (value ?? "").trim();
+
+    if (isBlank(normalized)) {
+        if (required) {
+            errors[key] = `${label} is required.`;
+        }
+
+        return;
+    }
+
+    if (!phonePattern.test(normalized)) {
+        errors[key] = `${label} must use international format like +919876543210.`;
+    }
+};
+
 const validateAddress = (errors: ValidationErrors, prefix: string, label: string, address: AddressDto): void => {
     addRequired(errors, `${prefix}.street`, `${label} street`, address.street ?? "");
     addRequired(errors, `${prefix}.city`, `${label} city`, address.city ?? "");
@@ -54,8 +77,8 @@ export const validateBasicInfo = (form: RegisterFormDraft): ValidationErrors => 
     addRequired(errors, "personDto.lastName", "Last name", person.lastName);
     addRequired(errors, "personDto.dateOfBirth", "Date of birth", person.dateOfBirth);
     addRequired(errors, "personDto.nationalityCode", "Country / Nationality", person.nationalityCode);
-    addRequired(errors, "personDto.contactPrimary", "Primary contact", person.contactPrimary);
-    addRequired(errors, "personDto.contactSecondary", "Secondary contact", person.contactSecondary);
+    addPhoneNumber(errors, "personDto.contactPrimary", "Primary contact", person.contactPrimary, true);
+    addPhoneNumber(errors, "personDto.contactSecondary", "Secondary contact", person.contactSecondary, false);
 
     validateAddress(errors, "personDto.birthPlace", "Birth place", person.birthPlace);
     validateAddress(errors, "personDto.permanentAddress", "Permanent address", person.permanentAddress);

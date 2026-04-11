@@ -15,19 +15,17 @@ export interface RequestSummaryDto {
 }
 
 export interface RequestReviewDto {
-    reviewerUserId: number;
     status: Extract<ReviewStatus, "APPROVED" | "REJECTED">;
 }
 
 interface BaseActionRequest {
     requestType: RequestType;
-    requestedByUserId: number;
     caseId: number;
     firId: number;
     status: "PENDING";
     reason: string;
-    reviewedAt: null;
-    reviewedByUserId: null;
+    reviewedAt?: null;
+    reviewedByUserId?: null;
 }
 
 export interface TransferUnitRequestDto extends BaseActionRequest {

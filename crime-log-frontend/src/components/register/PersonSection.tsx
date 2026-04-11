@@ -129,6 +129,7 @@ export default function PersonSection({
                     error={errors["personDto.contactPrimary"]}
                     id="contactPrimary"
                     label="Primary contact"
+                    description="Use international format like +919876543210."
                     onChange={(value) => onPersonChange("contactPrimary", value)}
                     pattern="\\+?[1-9]\\d{1,14}"
                     required
@@ -139,11 +140,11 @@ export default function PersonSection({
                     error={errors["personDto.contactSecondary"]}
                     id="contactSecondary"
                     label="Secondary contact"
+                    description="Optional. If you add one, use international format like +919876543210."
                     onChange={(value) => onPersonChange("contactSecondary", value)}
                     pattern="\\+?[1-9]\\d{1,14}"
-                    required
                     title="Enter number in international format, e.g., +911234567890"
-                    value={person.contactSecondary}
+                    value={person.contactSecondary ?? ""}
                 />
             </div>
 

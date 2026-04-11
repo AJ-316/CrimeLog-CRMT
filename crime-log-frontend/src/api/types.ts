@@ -99,6 +99,12 @@ export type RequestType = "TRANSFER_UNIT" | "TRANSFER_AGENCY" | "SUBMIT_CHARGE_S
 export const OfficerRequestTypeOptions = ["TRANSFER_UNIT", "TRANSFER_AGENCY", "SUBMIT_CHARGE_SHEET"] as const satisfies readonly RequestType[];
 export const LawyerRequestTypeOptions = ["LAWYER_CASE_REQUEST"] as const satisfies readonly RequestType[];
 
+export type AlertSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export const AlertSeverityOptions = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const satisfies readonly AlertSeverity[];
+
+export type CrimeReportStatus = "SENT_TO_POLICE" | "UNDER_REVIEW" | "INVESTIGATING" | "SUSPECT_IDENTIFIED" | "CRIMINAL_CAUGHT" | "CLOSED";
+export const CrimeReportStatusOptions = ["SENT_TO_POLICE", "UNDER_REVIEW", "INVESTIGATING", "SUSPECT_IDENTIFIED", "CRIMINAL_CAUGHT", "CLOSED"] as const satisfies readonly CrimeReportStatus[];
+
 export type LawyerRole = "DEFENSE" | "PROSECUTOR";
 export const LawyerRoleOptions = ["DEFENSE", "PROSECUTOR"] as const satisfies readonly LawyerRole[];
 

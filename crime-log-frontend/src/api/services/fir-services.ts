@@ -1,7 +1,7 @@
 import api from "../client.ts";
 import type {ApiResponse} from "../api.ts";
 import {getApiErrorMessage, requireApiData} from "../service-utils.ts";
-import type {FirDetailDto, FirRegisterRequest, FirSummaryDto} from "../dtos/fir.ts";
+import type {FirDetailDto, FirRegisterRequest, FirSearchParams, FirSummaryDto} from "../dtos/fir.ts";
 
 export const getFirs = async (): Promise<FirSummaryDto[]> => {
     try {
@@ -9,6 +9,23 @@ export const getFirs = async (): Promise<FirSummaryDto[]> => {
         return requireApiData(res.data, "Failed to load FIRs");
     } catch (error) {
         throw new Error(getApiErrorMessage(error, "Failed to load FIRs"));
+    }
+};
+
+export const searchFirs = async (params: FirSearchParams): Promise<FirSummaryDto[]> => {
+    try {
+        const searchParams = new URLSearchParams();
+        if (params.query?.trim()) searchParams.set("query", params.query.trim());
+        if (params.firType) searchParams.set("firType", params.firType);
+        if (typeof params.linkedToCase === "boolean") searchParams.set("linkedToCase", String(params.linkedToCase));
+        if (params.registeredFrom) searchParams.set("registeredFrom", params.registeredFrom);
+        if (params.registeredTo) searchParams.set("registeredTo", params.registeredTo);
+
+        const suffix = searchParams.toString();
+        const res = await api.get<ApiResponse<FirSummaryDto[]>>(`/fir/search${suffix ? `?${suffix}` : ""}`);
+        return requireApiData(res.data, "Failed to search FIRs");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to search FIRs"));
     }
 };
 

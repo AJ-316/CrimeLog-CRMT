@@ -20,19 +20,52 @@ const commonNav: readonly NavItem[] = [
 const roleNav: Record<Role, readonly NavItem[]> = {
     ADMIN: [
         {label: "Approvals", path: "/app/approvals", caption: "Review pending requests"},
+        {label: "Reported cases", path: "/app/reports", caption: "Review private crime reports"},
+        {label: "People", path: "/app/people", caption: "Criminal history lookup"},
+        {label: "Add person", path: "/app/persons/new", caption: "Register a new person record"},
+        {label: "Alerts", path: "/app/alerts", caption: "Publish public safety alerts"},
         {label: "Audit", path: "/app/audit", caption: "Operational metrics"}
     ],
     LAWYER: [
         {label: "Cases", path: "/app/cases", caption: "Assigned matters"},
         {label: "Clients", path: "/app/clients", caption: "Participants and status"},
+        {label: "People", path: "/app/people", caption: "History and records"},
         {label: "Hearings", path: "/app/hearings", caption: "Representation requests"}
     ],
     OFFICER: [
         {label: "FIR", path: "/app/fir", caption: "Register and review FIRs"},
+        {label: "Reported cases", path: "/app/reports", caption: "Acknowledge and investigate private reports"},
         {label: "Cases", path: "/app/cases", caption: "Investigation files"},
+        {label: "People", path: "/app/people", caption: "Criminal history lookup"},
+        {label: "Add person", path: "/app/persons/new", caption: "Register a new person record"},
+        {label: "Alerts", path: "/app/alerts", caption: "Publish public safety alerts"},
         {label: "Requests", path: "/app/requests", caption: "Transfer and action requests"}
     ],
-    PUBLIC: []
+    PUBLIC: [
+        {label: "Report crime", path: "/app/reports", caption: "Submit a private crime report"},
+        {label: "Alerts", path: "/app/alerts", caption: "View public safety alerts"}
+    ]
+};
+
+const roleWorkspaceTitle: Record<Role, string> = {
+    ADMIN: "Administration workspace",
+    LAWYER: "Legal workspace",
+    OFFICER: "Officer workspace",
+    PUBLIC: "Public workspace"
+};
+
+const roleWorkspaceDescription: Record<Role, string> = {
+    ADMIN: "Review approvals, private crime reports, and platform activity from one focused workspace.",
+    LAWYER: "Track assigned matters, client context, and hearings from one focused workspace.",
+    OFFICER: "Handle FIR registration, private crime reports, investigation cases, and field requests from one focused workspace.",
+    PUBLIC: "Submit private crime reports and follow official public safety alerts from one focused workspace."
+};
+
+const roleMainBannerTitle: Record<Role, string> = {
+    ADMIN: "Manage approvals, reports, records, and operational oversight in one place",
+    LAWYER: "Manage legal assignments and case participation in one place",
+    OFFICER: "Manage FIRs, reports, investigations, and action requests in one place",
+    PUBLIC: "Report crimes and view public safety alerts in one place"
 };
 
 export default function AppShell() {
@@ -62,9 +95,9 @@ export default function AppShell() {
                 <aside className="flex flex-col rounded-[28px] border border-white/60 bg-slate-950 text-white shadow-[0_25px_80px_rgba(15,23,42,0.45)] lg:sticky lg:top-3 lg:min-h-[calc(100vh-1.5rem)]">
                     <div className="border-b border-white/10 px-5 py-6 sm:px-6">
                         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">CrimeLog</p>
-                        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Operations workspace</h1>
+                        <h1 className="mt-3 text-2xl font-semibold tracking-tight">{roleWorkspaceTitle[role]}</h1>
                         <p className="mt-3 text-sm leading-6 text-slate-300">
-                            Move through FIRs, cases, approvals, and role-specific actions from one focused workspace.
+                            {roleWorkspaceDescription[role]}
                         </p>
                     </div>
 
@@ -112,7 +145,7 @@ export default function AppShell() {
                     <div className="mb-6 flex flex-col gap-4 rounded-[24px] border border-white bg-white/75 px-4 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">CrimeLog workspace</p>
-                            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Manage reporting, cases, and approvals in one place</h2>
+                            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{roleMainBannerTitle[role]}</h2>
                         </div>
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                             Signed in • Role context <span className="font-semibold text-slate-900">{role}</span>

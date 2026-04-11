@@ -8,12 +8,14 @@ import io.github.aj316.crimelog.backend.model.cases.Case;
 import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.people.users.OfficerProfile;
+import io.github.aj316.crimelog.backend.model.types.FIR_Type;
 import io.github.aj316.crimelog.backend.repository.CaseRepository;
 import io.github.aj316.crimelog.backend.repository.DepartmentUnitRepository;
 import io.github.aj316.crimelog.backend.repository.FirRepository;
 import io.github.aj316.crimelog.backend.repository.OfficerProfileRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -36,6 +38,24 @@ public class FirService {
 
     public List<FirSummaryDto> getFirs() {
         return firRepository.findAllByOrderByRegistrationDateTimeDesc().stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
+    public List<FirSummaryDto> searchFirs(String query, FIR_Type firType, Boolean linkedToCase,
+                                          LocalDateTime registeredFrom, LocalDateTime registeredTo) {
+        return firRepository.findAllByOrderByRegistrationDateTimeDesc().stream()
+                .filter(fir -> firType == null || fir.getFirType() == firType)
+                .filter(fir -> query == null || query.isBlank() || matchesQuery(fir, query))
+                .filter(fir -> registeredFrom == null || !fir.getRegistrationDateTime().isBefore(registeredFrom))
+                .filter(fir -> registeredTo == null || !fir.getRegistrationDateTime().isAfter(registeredTo))
+                .filter(fir -> {
+                    if (linkedToCase == null) {
+                        return true;
+                    }
+                    boolean isLinked = caseRepository.findByFir_FirId(fir.getFirId()).isPresent();
+                    return linkedToCase.equals(isLinked);
+                })
                 .map(this::toSummary)
                 .toList();
     }
@@ -111,6 +131,22 @@ public class FirService {
 
     private String getUnitName(DepartmentUnit unit) {
         return unit != null ? unit.getName() : null;
+    }
+
+    private boolean matchesQuery(FIR fir, String query) {
+        String normalizedQuery = query.trim().toLowerCase();
+
+        return Stream.of(
+                        fir.getFirNumber(),
+                        fir.getAccusedFirstName(),
+                        fir.getAccusedMiddleName(),
+                        fir.getAccusedLastName(),
+                        fir.getAccusedContact(),
+                        fir.getIncidentDescription()
+                )
+                .filter(value -> value != null && !value.isBlank())
+                .map(String::toLowerCase)
+                .anyMatch(value -> value.contains(normalizedQuery));
     }
 
     private String buildName(String firstName, String middleName, String lastName) {

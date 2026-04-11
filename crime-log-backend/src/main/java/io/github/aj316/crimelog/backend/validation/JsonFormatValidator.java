@@ -1,9 +1,9 @@
 package io.github.aj316.crimelog.backend.validation;
 
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 public class JsonFormatValidator implements ConstraintValidator<ValidJsonFormat, String> {
 

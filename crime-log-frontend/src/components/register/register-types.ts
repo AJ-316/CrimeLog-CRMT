@@ -66,7 +66,7 @@ export const createEmptyPerson = (): PersonDto => ({
     permanentAddress: createEmptyAddress(),
     currentAddress: createEmptyAddress(),
     contactPrimary: "",
-    contactSecondary: ""
+    contactSecondary: null
 });
 
 export const createInitialRegisterForm = (): RegisterFormDraft => ({
@@ -116,7 +116,7 @@ const normalizePerson = (person: PersonDto): PersonDto => ({
     permanentAddress: normalizeAddress(person.permanentAddress),
     currentAddress: normalizeAddress(person.currentAddress),
     contactPrimary: person.contactPrimary.trim(),
-    contactSecondary: person.contactSecondary.trim()
+    contactSecondary: person.contactSecondary ? person.contactSecondary.trim() : null
 });
 
 const requireLawyerSpecialization = (value: RegisterLawyerDraft["specialization"]): LawyerSpecialization => {

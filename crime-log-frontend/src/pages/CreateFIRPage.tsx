@@ -161,13 +161,13 @@ export default function CreateFIRPage() {
             <>
             <PageHeader
                 actions={<Link className={secondaryButtonClassName} to="/app/fir">Back to FIRs</Link>}
-                description="Register a new FIR with the reporting details, accused information, incident place, and the unit that should investigate first."
+                description="Register a basic FIR quickly, then add more details later if needed."
                 eyebrow="Officer FIR Module"
                 title="Create FIR"
             />
 
             <form className="space-y-6" onSubmit={handleSubmit}>
-                <SectionCard description="Record the main FIR metadata before adding accused and incident details." title="FIR registration">
+                <SectionCard description="Record only the core FIR details needed to create the entry." title="Basic FIR details">
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <WorkspaceFormField field="firNumber" label="FIR number" required update={updateField} value={form.firNumber} />
                         <label className="block text-sm font-medium text-slate-700">
@@ -179,6 +179,7 @@ export default function CreateFIRPage() {
                             </select>
                         </label>
                         <WorkspaceFormField field="registrationDateTime" label="Registration date and time" required type="datetime-local" update={updateField} value={form.registrationDateTime} />
+                        <WorkspaceFormField field="incidentDateTime" label="Incident date and time" required type="datetime-local" update={updateField} value={form.incidentDateTime ?? ""} />
                         <label className="block text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
                             Initial investigating unit
                             <select className={inputClassName} disabled required value={form.initialInvestigatingUnitId || ""}>
@@ -188,10 +189,14 @@ export default function CreateFIRPage() {
                                 ))}
                             </select>
                         </label>
+                        <label className="block text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
+                            Incident description
+                            <textarea className={textareaClassName} onChange={(event) => updateField("incidentDescription", event.target.value)} placeholder="Briefly describe what happened" required value={form.incidentDescription ?? ""} />
+                        </label>
                     </div>
                 </SectionCard>
 
-                <SectionCard description="Capture the accused identity and address visible on this FIR." title="Accused details">
+                <SectionCard description="These fields are optional for basic FIR filing and can be filled when information is available." title="Additional details (optional)">
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <WorkspaceFormField field="accusedFirstName" label="First name" update={updateField} value={form.accusedFirstName ?? ""} />
                         <WorkspaceFormField field="accusedMiddleName" label="Middle name" update={updateField} value={form.accusedMiddleName ?? ""} />

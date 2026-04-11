@@ -18,6 +18,11 @@ import LawyerHearingsPage from "./pages/LawyerHearingsPage.tsx";
 import AuditPage from "./pages/AuditPage.tsx";
 import RequireRole from "./components/app/RequireRole.tsx";
 import AccessDeniedPage from "./pages/AccessDeniedPage.tsx";
+import PersonHistoryPage from "./pages/PersonHistoryPage.tsx";
+import CreatePersonPage from "./pages/CreatePersonPage.tsx";
+import AlertsPage from "./pages/AlertsPage.tsx";
+import CrimeReportsPage from "./pages/CrimeReportsPage.tsx";
+import CrimeReportDetailsPage from "./pages/CrimeReportDetailsPage.tsx";
 
 function App() {
     return (
@@ -54,6 +59,17 @@ function App() {
                         <Route element={<RequireRole allowedRoles={["LAWYER"]} />}>
                             <Route path="clients" element={<LawyerClientsPage />} />
                             <Route path="hearings" element={<LawyerHearingsPage />} />
+                        </Route>
+
+                        <Route element={<RequireRole allowedRoles={["ADMIN", "OFFICER", "LAWYER"]} />}>
+                            <Route path="people" element={<PersonHistoryPage />} />
+                            <Route path="persons/new" element={<CreatePersonPage />} />
+                        </Route>
+
+                        <Route element={<RequireRole allowedRoles={["ADMIN", "OFFICER", "PUBLIC"]} />}>
+                            <Route path="alerts" element={<AlertsPage />} />
+                            <Route path="reports" element={<CrimeReportsPage />} />
+                            <Route path="reports/:reportId" element={<CrimeReportDetailsPage />} />
                         </Route>
                     </Route>
                 </Route>

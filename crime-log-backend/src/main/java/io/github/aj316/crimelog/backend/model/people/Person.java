@@ -34,7 +34,7 @@ public class Person {
     private String lastName;
 
     @Column(length = 255, nullable = false)
-    private String profilePhotoPath = "images/profiles/default-profile.png";
+    private String profilePhotoPath;
 
     @Column(nullable = false)
     private LocalDate dateOfBirth;
@@ -84,6 +84,13 @@ public class Person {
     private String contactPrimary;
 
     @Pattern(regexp = INTERNATIONAL_NUMBER_REGEX)
-    @Column(length = 15, nullable = false)
+    @Column(length = 15)
     private String contactSecondary;
+
+    @PrePersist
+    public void setDefaultProfilePhoto() {
+        if (profilePhotoPath == null) {
+            profilePhotoPath = "images/profiles/default-profile.png";
+        }
+    }
 }

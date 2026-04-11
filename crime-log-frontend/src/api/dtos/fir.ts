@@ -50,3 +50,12 @@ export interface FirRegisterRequest {
     incidentDateTime?: string | null;
     incidentDescription?: string | null;
 }
+
+export interface FirSearchParams {
+    query?: string;
+    firType?: FirType;
+    linkedToCase?: boolean;
+    registeredFrom?: string;
+    registeredTo?: string;
+}
+

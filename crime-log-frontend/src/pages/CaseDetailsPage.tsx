@@ -1,10 +1,11 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
 import {Link, useOutletContext, useParams} from "react-router-dom";
-import type {CaseDetailDto, CaseParticipantCreateRequest} from "../api/dtos/case.ts";
-import type {PersonOptionDto} from "../api/dtos/reference.ts";
-import {addCaseParticipant, getCaseDetails} from "../api/services/case-services.ts";
-import {getPeople} from "../api/services/reference-services.ts";
-import {CaseParticipantTypeOptions} from "../api/types.ts";
+import type {CaseDetailDto, CaseParticipantCreateRequest, CaseStageUpdateRequest} from "../api/dtos/case.ts";
+import type {DepartmentUnitOptionDto, CourtOptionDto, PersonOptionDto} from "../api/dtos/reference.ts";
+import {addCaseParticipant, getCaseDetails, updateCaseCourt, updateCaseInvestigatingUnit, updateCaseStage} from "../api/services/case-services.ts";
+import {getCourts, getDepartmentUnits, getPeople} from "../api/services/reference-services.ts";
+import type {CaseStage} from "../api/types.ts";
+import {CaseParticipantTypeOptions, CaseStageOptions} from "../api/types.ts";
 import type {AppOutletContext} from "../components/app/AppShell.tsx";
 import {
     EmptyState,
@@ -28,6 +29,12 @@ export default function CaseDetailsPage() {
     const {role} = useOutletContext<AppOutletContext>();
     const [caseDetail, setCaseDetail] = useState<CaseDetailDto | null>(null);
     const [people, setPeople] = useState<PersonOptionDto[]>([]);
+    const [departmentUnits, setDepartmentUnits] = useState<DepartmentUnitOptionDto[]>([]);
+    const [courts, setCourts] = useState<CourtOptionDto[]>([]);
+    const [selectedStage, setSelectedStage] = useState<CaseStage>("INVESTIGATION");
+    const [selectedUnitId, setSelectedUnitId] = useState("");
+    const [selectedCourtId, setSelectedCourtId] = useState("");
+    const [isUpdatingCase, setIsUpdatingCase] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,6 +44,8 @@ export default function CaseDetailsPage() {
     const loadCase = async (id: number) => {
         const details = await getCaseDetails(id);
         setCaseDetail(details);
+        setSelectedStage(details.caseStage);
+        setSelectedCourtId(details.courtId ? String(details.courtId) : "");
     };
 
     useEffect(() => {
@@ -51,9 +60,15 @@ export default function CaseDetailsPage() {
             try {
                 setIsLoading(true);
                 setError("");
-                const [details, peopleOptions] = await Promise.all([getCaseDetails(id), getPeople()]);
+                const [details, peopleOptions, units, courtOptions] = await Promise.all([getCaseDetails(id), getPeople(), getDepartmentUnits(), getCourts()]);
                 setCaseDetail(details);
                 setPeople(peopleOptions);
+                setDepartmentUnits(units);
+                setCourts(courtOptions);
+                setSelectedStage(details.caseStage);
+                const selectedUnit = units.find((unit) => unit.name === details.currentInvestigatingUnitName);
+                setSelectedUnitId(selectedUnit ? String(selectedUnit.id) : "");
+                setSelectedCourtId(details.courtId ? String(details.courtId) : "");
             } catch (loadError) {
                 setError(loadError instanceof Error ? loadError.message : "Failed to load case details");
             } finally {
@@ -81,6 +96,37 @@ export default function CaseDetailsPage() {
             setError(submitError instanceof Error ? submitError.message : "Failed to add participant");
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleCaseUpdateSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const id = Number(caseId);
+        if (!Number.isInteger(id)) {
+            return;
+        }
+
+        try {
+            setIsUpdatingCase(true);
+            setError("");
+
+            const stageRequest: CaseStageUpdateRequest = {
+                stage: selectedStage,
+                closedOn: selectedStage === "CLOSED" ? new Date().toISOString().slice(0, 10) : null
+            };
+
+            await updateCaseStage(id, stageRequest);
+            if (selectedUnitId) {
+                await updateCaseInvestigatingUnit(id, {departmentUnitId: Number(selectedUnitId)});
+            }
+
+            await updateCaseCourt(id, {courtId: selectedCourtId ? Number(selectedCourtId) : null});
+
+            await loadCase(id);
+        } catch (submitError) {
+            setError(submitError instanceof Error ? submitError.message : "Failed to update case details");
+        } finally {
+            setIsUpdatingCase(false);
         }
     };
 
@@ -123,6 +169,42 @@ export default function CaseDetailsPage() {
                                 <p className="mt-2 text-base font-semibold text-slate-900">{caseDetail.courtName ?? "Not assigned"}</p>
                             </div>
                         </div>
+
+                        {role === "OFFICER" || role === "ADMIN" ? (
+                            <form className="mt-5 grid gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 md:grid-cols-4" onSubmit={handleCaseUpdateSubmit}>
+                                <label className="block text-sm font-medium text-slate-700">
+                                    Case stage
+                                    <select className={inputClassName} onChange={(event) => setSelectedStage(event.target.value as CaseStage)} value={selectedStage}>
+                                        {CaseStageOptions.map((option) => (
+                                            <option key={option} value={option}>{formatEnumLabel(option)}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <label className="block text-sm font-medium text-slate-700 md:col-span-2">
+                                    Investigating unit
+                                    <select className={inputClassName} onChange={(event) => setSelectedUnitId(event.target.value)} value={selectedUnitId}>
+                                        <option value="">Select unit</option>
+                                        {departmentUnits.map((unit) => (
+                                            <option key={unit.id} value={unit.id}>{unit.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <label className="block text-sm font-medium text-slate-700">
+                                    Court
+                                    <select className={inputClassName} onChange={(event) => setSelectedCourtId(event.target.value)} value={selectedCourtId}>
+                                        <option value="">Not assigned</option>
+                                        {courts.map((court) => (
+                                            <option key={court.id} value={court.id}>{court.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <div className="md:col-span-4">
+                                    <button className={primaryButtonClassName} disabled={isUpdatingCase} type="submit">
+                                        {isUpdatingCase ? "Saving updates" : "Update case status, unit, and court"}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : null}
                     </SectionCard>
 
                     <SectionCard description="The FIR that originated this case." title="Linked FIR">

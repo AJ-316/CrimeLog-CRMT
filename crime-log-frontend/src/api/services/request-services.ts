@@ -12,9 +12,9 @@ export const getPendingRequests = async (): Promise<RequestSummaryDto[]> => {
     }
 };
 
-export const getMyRequests = async (userId: number): Promise<RequestSummaryDto[]> => {
+export const getMyRequests = async (): Promise<RequestSummaryDto[]> => {
     try {
-        const res = await api.get<ApiResponse<RequestSummaryDto[]>>(`/requests/mine?userId=${userId}`);
+        const res = await api.get<ApiResponse<RequestSummaryDto[]>>("/requests/mine");
         return requireApiData(res.data, "Failed to load requests");
     } catch (error) {
         throw new Error(getApiErrorMessage(error, "Failed to load requests"));

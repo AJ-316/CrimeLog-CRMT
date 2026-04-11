@@ -1,7 +1,7 @@
 import api from "../client.ts";
 import type {ApiResponse} from "../api.ts";
 import {getApiErrorMessage, requireApiData} from "../service-utils.ts";
-import type {AgencyOptionDto, DepartmentUnitOptionDto, PersonOptionDto} from "../dtos/reference.ts";
+import type {AgencyOptionDto, CourtOptionDto, DepartmentUnitOptionDto, PersonOptionDto} from "../dtos/reference.ts";
 
 export const getDepartmentUnits = async (): Promise<DepartmentUnitOptionDto[]> => {
     try {
@@ -27,6 +27,15 @@ export const getPeople = async (): Promise<PersonOptionDto[]> => {
         return requireApiData(res.data, "Failed to load people");
     } catch (error) {
         throw new Error(getApiErrorMessage(error, "Failed to load people"));
+    }
+};
+
+export const getCourts = async (): Promise<CourtOptionDto[]> => {
+    try {
+        const res = await api.get<ApiResponse<CourtOptionDto[]>>("/courts");
+        return requireApiData(res.data, "Failed to load courts");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to load courts"));
     }
 };
 

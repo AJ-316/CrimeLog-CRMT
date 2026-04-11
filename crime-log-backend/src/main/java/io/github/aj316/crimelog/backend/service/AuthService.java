@@ -7,8 +7,6 @@ import io.github.aj316.crimelog.backend.dto.auth.RegisterOfficerRequest;
 import io.github.aj316.crimelog.backend.dto.auth.RegisterRequestDto;
 import io.github.aj316.crimelog.backend.model.people.Person;
 import io.github.aj316.crimelog.backend.model.people.users.User;
-import io.github.aj316.crimelog.backend.model.types.Status;
-import io.github.aj316.crimelog.backend.model.types.Role;
 import io.github.aj316.crimelog.backend.repository.UserRepository;
 import io.github.aj316.crimelog.backend.service.jwt.JwtService;
 import jakarta.transaction.Transactional;
@@ -61,11 +59,6 @@ public class AuthService {
     public @Email String register(RegisterRequestDto requestDto) {
         Person person = personService.addPerson(requestDto.personDto());
         User user = userService.addUser(requestDto.email(), requestDto.password(), requestDto.role(), person);
-
-        // todo : temporary auto approval for admin
-        if (requestDto.role().equals(Role.ADMIN)) {
-            user.setAccountStatus(Status.APPROVED);
-        }
 
         if (requestDto instanceof RegisterLawyerRequest request) {
             lawyerService.registerProfile(user.getUserId(), request);

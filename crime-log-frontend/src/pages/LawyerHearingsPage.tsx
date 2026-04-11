@@ -55,7 +55,7 @@ export default function LawyerHearingsPage() {
         try {
             setIsLoading(true);
             setError("");
-            const [caseResults, requestResults] = await Promise.all([getCases(), getMyRequests(userId)]);
+            const [caseResults, requestResults] = await Promise.all([getCases(), getMyRequests()]);
             setCases(caseResults);
             setRequests(requestResults.filter((request) => request.requestType === "LAWYER_CASE_REQUEST"));
         } catch (loadError) {
@@ -78,13 +78,11 @@ export default function LawyerHearingsPage() {
 
         const payload: ActionRequestDto = {
             requestType: "LAWYER_CASE_REQUEST",
-            requestedByUserId: userId,
             caseId: selectedCase.caseId,
             firId: selectedCase.firId,
             status: "PENDING",
             reason: form.reason,
             reviewedAt: null,
-            reviewedByUserId: null,
             lawyerRole: form.lawyerRole
         };
 

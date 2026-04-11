@@ -1,6 +1,7 @@
 package io.github.aj316.crimelog.backend.repository;
 
 import io.github.aj316.crimelog.backend.model.Request;
+import io.github.aj316.crimelog.backend.model.types.RequestType;
 import io.github.aj316.crimelog.backend.model.types.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +11,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findByStatusOrderByCreatedAtDesc(Status status);
 
     List<Request> findByRequestedByUserIdOrderByCreatedAtDesc(Long requestedByUserId);
+
+    List<Request> findByRequestedByUserIdAndRequestTypeAndStatusOrderByCreatedAtDesc(Long requestedByUserId, RequestType requestType, Status status);
 }

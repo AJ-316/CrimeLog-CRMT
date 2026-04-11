@@ -2,6 +2,7 @@ package io.github.aj316.crimelog.backend.controller;
 
 import io.github.aj316.crimelog.backend.dto.ApiResponse;
 import io.github.aj316.crimelog.backend.dto.cases.*;
+import io.github.aj316.crimelog.backend.model.types.CaseStage;
 import io.github.aj316.crimelog.backend.service.CaseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,13 +25,25 @@ public class CaseController {
         return ResponseEntity.ok(ApiResponse.success(caseService.getCaseSummaries(), "Case details retrieved successfully"));
     }
 
+    @GetMapping({"/search", "/_search"})
+    public ResponseEntity<ApiResponse<List<CaseSummaryDto>>> searchCases(
+            @RequestParam(required = false) CaseStage stage,
+            @RequestParam(required = false) Long investigatingUnitId,
+            @RequestParam(required = false) String caseNumber
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                caseService.searchCases(stage, investigatingUnitId, caseNumber),
+                "Filtered case details retrieved successfully"
+        ));
+    }
+
     @GetMapping("/basic")
     public ResponseEntity<ApiResponse<List<BasicCaseDetailDto>>> getBasicCaseDetails() {
         List<BasicCaseDetailDto> caseDetails = caseService.getBasicCaseDetails();
         return ResponseEntity.ok(ApiResponse.success(caseDetails, "Basic case details retrieved successfully"));
     }
 
-    @GetMapping("/{caseId}")
+    @GetMapping("/{caseId:\\d+}")
     public ResponseEntity<ApiResponse<CaseDetailDto>> getCase(@PathVariable Long caseId) {
         return ResponseEntity.ok(ApiResponse.success(caseService.getCaseDetail(caseId), "Case retrieved successfully"));
     }
@@ -41,13 +54,49 @@ public class CaseController {
         return ResponseEntity.ok(ApiResponse.success(caseService.createCase(request), "Case created successfully"));
     }
 
-    @GetMapping("/{caseId}/persons")
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    @PatchMapping("/{caseId:\\d+}/stage")
+    public ResponseEntity<ApiResponse<CaseSummaryDto>> updateCaseStage(
+            @PathVariable Long caseId,
+            @RequestBody CaseStageUpdateRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                caseService.updateCaseStage(caseId, request.stage(), request.closedOn()),
+                "Case stage updated successfully"
+        ));
+    }
+
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    @PatchMapping("/{caseId:\\d+}/investigating-unit")
+    public ResponseEntity<ApiResponse<CaseSummaryDto>> updateInvestigatingUnit(
+            @PathVariable Long caseId,
+            @RequestBody InvestigatingUnitUpdateRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                caseService.updateInvestigatingUnit(caseId, request.departmentUnitId()),
+                "Investigating unit updated successfully"
+        ));
+    }
+
+        @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+        @PatchMapping("/{caseId:\\d+}/court")
+        public ResponseEntity<ApiResponse<CaseSummaryDto>> updateCourt(
+            @PathVariable Long caseId,
+            @RequestBody CourtUpdateRequest request
+        ) {
+        return ResponseEntity.ok(ApiResponse.success(
+            caseService.updateCourt(caseId, request.courtId()),
+            "Court updated successfully"
+        ));
+        }
+
+    @GetMapping("/{caseId:\\d+}/persons")
     public ResponseEntity<ApiResponse<List<CaseParticipantDto>>> getCaseParticipants(@PathVariable Long caseId) {
         return ResponseEntity.ok(ApiResponse.success(caseService.getCaseParticipants(caseId), "Case participants retrieved successfully"));
     }
 
     @PreAuthorize("hasRole('OFFICER')")
-    @PostMapping("/{caseId}/persons")
+    @PostMapping("/{caseId:\\d+}/persons")
     public ResponseEntity<ApiResponse<CaseParticipantDto>> addCaseParticipant(@PathVariable Long caseId, @RequestBody CaseParticipantCreateRequest request) {
         return ResponseEntity.ok(ApiResponse.success(caseService.addParticipant(caseId, request), "Case participant added successfully"));
     }
