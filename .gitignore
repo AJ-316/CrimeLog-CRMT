@@ -20,6 +20,7 @@
 # ==============================
 crime-log-backend/target/
 crime-log-backend/.mvn/wrapper/maven-wrapper.jar
+.env
 
 # STS / Eclipse leftovers
 .apt_generated
