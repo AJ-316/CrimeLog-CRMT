@@ -13,6 +13,7 @@ import {
     primaryButtonClassName,
     secondaryButtonClassName
 } from "../components/app/WorkspaceUi.tsx";
+import {readImageFileAsBase64} from "../utils/file-upload.ts";
 
 const phonePattern = /^\+?[1-9]\d{1,14}$/;
 
@@ -29,7 +30,9 @@ const createInitialPerson = (): PersonDto => ({
     firstName: "",
     middleName: "",
     lastName: "",
-    profilePhotoPath: "",
+    profilePhotoPath: "images/profiles/default-profile.png",
+    profilePhotoData: null,
+    profilePhotoContentType: null,
     dateOfBirth: "",
     gender: "MALE",
     nationalityCode: "",
@@ -67,6 +70,18 @@ export default function CreatePersonPage() {
                 [field]: value
             }
         }));
+    };
+
+    const handleProfilePhotoChange = async (file: File | null) => {
+        if (!file) {
+            setField("profilePhotoData", null);
+            setField("profilePhotoContentType", null);
+            return;
+        }
+
+        const uploadedImage = await readImageFileAsBase64(file);
+        setField("profilePhotoData", uploadedImage.base64Data);
+        setField("profilePhotoContentType", uploadedImage.contentType);
     };
 
     const validate = (): Record<string, string> => {
@@ -131,7 +146,9 @@ export default function CreatePersonPage() {
         firstName: form.firstName.trim(),
         middleName: form.middleName.trim(),
         lastName: form.lastName.trim(),
-        profilePhotoPath: form.profilePhotoPath.trim(),
+        profilePhotoPath: form.profilePhotoPath.trim() || "images/profiles/default-profile.png",
+        profilePhotoData: form.profilePhotoData?.trim() ? form.profilePhotoData.trim() : null,
+        profilePhotoContentType: form.profilePhotoContentType?.trim() ? form.profilePhotoContentType.trim() : null,
         nationalityCode: form.nationalityCode.trim().toUpperCase(),
         birthPlace: normalizeAddress(form.birthPlace),
         permanentAddress: normalizeAddress(form.permanentAddress),
@@ -239,8 +256,9 @@ export default function CreatePersonPage() {
                             {errors.contactSecondary ? <p className="mt-2 text-xs text-rose-600">{errors.contactSecondary}</p> : null}
                         </label>
                         <label className="block text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
-                            Profile photo path (optional)
-                            <input className={inputClassName} onChange={(event) => setField("profilePhotoPath", event.target.value)} placeholder="images/profiles/default-profile.png" value={form.profilePhotoPath} />
+                            Profile photo
+                            <input accept="image/*" className={inputClassName} onChange={(event) => void handleProfilePhotoChange(event.target.files?.[0] ?? null)} type="file" />
+                            <p className="mt-2 text-xs text-slate-500">Upload a photo to store it with the person record in the database.</p>
                         </label>
                     </div>
                 </SectionCard>

@@ -40,4 +40,46 @@ public class AlertService {
                 .map(AlertDto::from)
                 .toList();
     }
+
+    public AlertDto updateAlert(Long alertId, CreateAlertRequest request, Long actorUserId, Role actorRole) {
+        Alert alert = alertRepository.findById(alertId)
+                .orElseThrow(() -> new IllegalArgumentException("Alert not found"));
+
+        if (alert.getCreatedByUserId() == null) {
+            alert.setCreatedByUserId(actorUserId);
+        }
+        if (alert.getCreatedByRole() == null) {
+            alert.setCreatedByRole(actorRole);
+        }
+
+        ensureManagePermission(alert, actorUserId, actorRole);
+
+        alert.setMessage(request.message().trim());
+        alert.setSeverity(request.severity());
+        return AlertDto.from(alertRepository.save(alert));
+    }
+
+    public String deleteAlert(Long alertId, Long actorUserId, Role actorRole) {
+        Alert alert = alertRepository.findById(alertId)
+                .orElseThrow(() -> new IllegalArgumentException("Alert not found"));
+
+        ensureManagePermission(alert, actorUserId, actorRole);
+
+        if (!Boolean.TRUE.equals(alert.getActive())) {
+            return "Alert(" + alertId + ") is already inactive";
+        }
+
+        alert.setActive(false);
+        alertRepository.save(alert);
+        return "Alert(" + alertId + ") deleted successfully";
+    }
+
+    private void ensureManagePermission(Alert alert, Long actorUserId, Role actorRole) {
+        boolean isAdmin = actorRole == Role.ADMIN;
+        boolean isCreator = alert.getCreatedByUserId() != null && alert.getCreatedByUserId().equals(actorUserId);
+
+        if (!isAdmin && !isCreator) {
+            throw new IllegalArgumentException("Only the alert creator or an admin can modify this alert");
+        }
+    }
 }

@@ -19,6 +19,29 @@ const createEmptyAddress = (): AddressDto => ({
     countryCode: ""
 });
 
+const phonePattern = /^\+?[1-9]\d{1,14}$/;
+
+const normalizeAddress = (address: AddressDto | null | undefined): AddressDto | null => {
+    if (!address) {
+        return null;
+    }
+
+    const normalized = {
+        street: address.street.trim(),
+        city: address.city.trim(),
+        state: address.state.trim(),
+        postalCode: address.postalCode.trim(),
+        countryCode: address.countryCode.trim().toUpperCase()
+    };
+
+    const hasAnyValue = Object.values(normalized).some((value) => value.length > 0);
+    if (!hasAnyValue) {
+        return null;
+    }
+
+    return normalized;
+};
+
 const toInputDateTimeValue = (date: Date) => {
     const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
@@ -83,7 +106,48 @@ export default function CreateFIRPage() {
         try {
             setIsSubmitting(true);
             setError("");
-            await createFir({...form, officerIdCreatedBy: userId});
+
+            const normalizedIncidentPlace = normalizeAddress(form.incidentPlace);
+            if (!normalizedIncidentPlace) {
+                setError("Incident place is required.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            const missingIncidentFields = [
+                normalizedIncidentPlace.street,
+                normalizedIncidentPlace.city,
+                normalizedIncidentPlace.state,
+                normalizedIncidentPlace.postalCode,
+                normalizedIncidentPlace.countryCode
+            ].some((value) => value.length === 0);
+
+            if (missingIncidentFields) {
+                setError("Fill all incident place fields (street, city, state, postal code, country code).");
+                setIsSubmitting(false);
+                return;
+            }
+
+            const normalizedAccusedContact = (form.accusedContact ?? "").trim();
+            if (normalizedAccusedContact && !phonePattern.test(normalizedAccusedContact)) {
+                setError("Accused contact must be in international format like +919876543210.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            await createFir({
+                ...form,
+                firNumber: form.firNumber.trim(),
+                accusedFirstName: form.accusedFirstName.trim(),
+                accusedMiddleName: form.accusedMiddleName.trim(),
+                accusedLastName: form.accusedLastName.trim(),
+                accusedContact: normalizedAccusedContact || null,
+                accusedDescription: form.accusedDescription.trim(),
+                accusedAddress: normalizeAddress(form.accusedAddress),
+                incidentPlace: normalizedIncidentPlace,
+                incidentDescription: form.incidentDescription.trim(),
+                officerIdCreatedBy: userId
+            });
             navigate("/app/fir");
         } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : "Failed to create FIR");
@@ -136,13 +200,13 @@ export default function CreateFIRPage() {
                         <WorkspaceFormField field="accusedFirstName" label="Accused first name" update={updateField} value={form.accusedFirstName} />
                         <WorkspaceFormField field="accusedMiddleName" label="Middle name" update={updateField} value={form.accusedMiddleName} />
                         <WorkspaceFormField field="accusedLastName" label="Accused last name" update={updateField} value={form.accusedLastName} />
-                        <WorkspaceFormField field="accusedContact" label="Accused contact number" update={updateField} value={form.accusedContact} />
+                        <WorkspaceFormField field="accusedContact" label="Accused contact number" update={updateField} value={form.accusedContact ?? ""} />
                     </div>
                     <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {(["street", "city", "state", "postalCode", "countryCode"] as const).map((field) => (
                             <label className="block text-sm font-medium text-slate-700" key={field}>
                                 {field === "postalCode" ? "Accused postal code" : field === "countryCode" ? "Accused country code" : `Accused ${field.charAt(0).toUpperCase() + field.slice(1)}`}
-                                <input className={inputClassName} onChange={(event) => updateAddress("accusedAddress", field, event.target.value)} value={form.accusedAddress[field]} />
+                                <input className={inputClassName} onChange={(event) => updateAddress("accusedAddress", field, event.target.value)} value={(form.accusedAddress ?? createEmptyAddress())[field]} />
                             </label>
                         ))}
                     </div>
@@ -150,7 +214,7 @@ export default function CreateFIRPage() {
                         {(["street", "city", "state", "postalCode", "countryCode"] as const).map((field) => (
                             <label className="block text-sm font-medium text-slate-700" key={field}>
                                 {field === "postalCode" ? "Incident postal code" : field === "countryCode" ? "Incident country code" : `Incident ${field.charAt(0).toUpperCase() + field.slice(1)}`}
-                                <input className={inputClassName} onChange={(event) => updateAddress("incidentPlace", field, event.target.value)} value={form.incidentPlace[field]} />
+                                <input className={inputClassName} onChange={(event) => updateAddress("incidentPlace", field, event.target.value)} value={(form.incidentPlace ?? createEmptyAddress())[field]} />
                             </label>
                         ))}
                     </div>

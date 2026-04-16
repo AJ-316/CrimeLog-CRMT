@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react";
 import type {RequestSummaryDto} from "../api/dtos/request.ts";
 import type {UserSummaryDto} from "../api/dtos/user.ts";
-import {approveUser, getPendingUsers} from "../api/services/user-services.ts";
-import {getPendingRequests, reviewRequest} from "../api/services/request-services.ts";
+import {approveUser, deletePendingUser, getPendingUsers, rejectUser} from "../api/services/user-services.ts";
+import {deleteRequest, getPendingRequests, reviewRequest} from "../api/services/request-services.ts";
 import {
     EmptyState,
     LoadingBlock,
@@ -70,6 +70,45 @@ export default function ApprovalsPage() {
         }
     };
 
+    const handleRejectUser = async (userId: number) => {
+        try {
+            setActiveUserId(userId);
+            setError("");
+            await rejectUser(userId);
+            await loadPendingApprovals();
+        } catch (rejectError) {
+            setError(rejectError instanceof Error ? rejectError.message : "Failed to reject user");
+        } finally {
+            setActiveUserId(null);
+        }
+    };
+
+    const handleDeleteUser = async (userId: number) => {
+        try {
+            setActiveUserId(userId);
+            setError("");
+            await deletePendingUser(userId);
+            await loadPendingApprovals();
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Failed to delete user");
+        } finally {
+            setActiveUserId(null);
+        }
+    };
+
+    const handleDeleteRequest = async (requestId: number) => {
+        try {
+            setActiveRequestId(requestId);
+            setError("");
+            await deleteRequest(requestId);
+            await loadPendingApprovals();
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Failed to delete request");
+        } finally {
+            setActiveRequestId(null);
+        }
+    };
+
     return (
         <section className="space-y-6">
             <PageHeader
@@ -113,6 +152,7 @@ export default function ApprovalsPage() {
                                             <div className="flex flex-wrap gap-2">
                                                 <button className={secondaryButtonClassName} disabled={activeRequestId === request.requestId} onClick={() => void handleReview(request.requestId, "APPROVED")} type="button">Approve</button>
                                                 <button className={dangerButtonClassName} disabled={activeRequestId === request.requestId} onClick={() => void handleReview(request.requestId, "REJECTED")} type="button">Reject</button>
+                                                <button className={dangerButtonClassName} disabled={activeRequestId === request.requestId} onClick={() => void handleDeleteRequest(request.requestId)} type="button">Delete</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -146,14 +186,32 @@ export default function ApprovalsPage() {
                                         <td className={tableCellClassName}>{formatEnumLabel(user.role)}</td>
                                         <td className={tableCellClassName}><StatusBadge label={formatEnumLabel(user.accountStatus)} tone="amber" /></td>
                                         <td className={tableCellClassName}>
-                                            <button
-                                                className={secondaryButtonClassName}
-                                                disabled={activeUserId === user.userId}
-                                                onClick={() => void handleApproveUser(user.userId)}
-                                                type="button"
-                                            >
-                                                Approve
-                                            </button>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    className={secondaryButtonClassName}
+                                                    disabled={activeUserId === user.userId}
+                                                    onClick={() => void handleApproveUser(user.userId)}
+                                                    type="button"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    className={dangerButtonClassName}
+                                                    disabled={activeUserId === user.userId}
+                                                    onClick={() => void handleRejectUser(user.userId)}
+                                                    type="button"
+                                                >
+                                                    Reject
+                                                </button>
+                                                <button
+                                                    className={dangerButtonClassName}
+                                                    disabled={activeUserId === user.userId}
+                                                    onClick={() => void handleDeleteUser(user.userId)}
+                                                    type="button"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

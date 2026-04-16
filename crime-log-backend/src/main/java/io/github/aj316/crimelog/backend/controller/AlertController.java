@@ -39,4 +39,34 @@ public class AlertController {
                 "Alert created successfully"
         ));
     }
+
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    @PatchMapping("/{alertId}")
+    public ResponseEntity<ApiResponse<AlertDto>> updateAlert(@PathVariable Long alertId, @Valid @RequestBody CreateAlertRequest request) {
+        Long userId = authenticatedUserService.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(
+                alertService.updateAlert(alertId, request, userId, authenticatedUserService.getCurrentUserRole()),
+                "Alert updated successfully"
+        ));
+    }
+
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    @DeleteMapping("/{alertId}")
+    public ResponseEntity<ApiResponse<String>> deleteAlert(@PathVariable Long alertId) {
+        Long userId = authenticatedUserService.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(
+                alertService.deleteAlert(alertId, userId, authenticatedUserService.getCurrentUserRole()),
+                "Alert deleted successfully"
+        ));
+    }
+
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    @PostMapping("/{alertId}/delete")
+    public ResponseEntity<ApiResponse<String>> deleteAlertViaPost(@PathVariable Long alertId) {
+        Long userId = authenticatedUserService.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(
+                alertService.deleteAlert(alertId, userId, authenticatedUserService.getCurrentUserRole()),
+                "Alert deleted successfully"
+        ));
+    }
 }

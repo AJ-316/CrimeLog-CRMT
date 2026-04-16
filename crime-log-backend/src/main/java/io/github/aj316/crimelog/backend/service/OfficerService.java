@@ -151,7 +151,7 @@ public class OfficerService {
                     }
                 }
 
-                Long targetUnitId = ((Number) payload.get("targetUnitId")).longValue();
+                Long targetUnitId = requireLongPayloadField(payload, "targetUnitId", request.getRequestType());
 
                 Case caseEntity = caseRepository.findById(request.getCaseId())
                         .orElseThrow(() -> new NoSuchElementException("Case not found"));
@@ -167,7 +167,7 @@ public class OfficerService {
                 if(!user.getRole().equals(Role.ADMIN))
                     throw new IllegalArgumentException("Only admins can approve agency transfer requests");
 
-                Long targetAgencyId = ((Number) payload.get("targetAgencyId")).longValue();
+                Long targetAgencyId = requireLongPayloadField(payload, "targetAgencyId", request.getRequestType());
 
                 Case caseEntity = caseRepository.findById(request.getCaseId())
                         .orElseThrow(() -> new NoSuchElementException("Case not found"));
@@ -194,7 +194,8 @@ public class OfficerService {
                 Case caseEntity = caseRepository.findById(request.getCaseId())
                         .orElseThrow();
 
-                caseLawyerRepository.save(new CaseLawyer(caseEntity, lawyer, LawyerRole.valueOf((String) payload.get("lawyerRole"))));
+                String lawyerRoleValue = requireStringPayloadField(payload, "lawyerRole", request.getRequestType());
+                caseLawyerRepository.save(new CaseLawyer(caseEntity, lawyer, LawyerRole.valueOf(lawyerRoleValue)));
             }
 
              case SUBMIT_CHARGE_SHEET -> {
@@ -210,6 +211,25 @@ public class OfficerService {
 
         requestRepository.save(request);
         return  "Request(" + requestId + ") for " + request.getRequestType() + " has been updated";
+    }
+
+    public String deleteRequest(Long actorUserId, Role actorRole, Long requestId) {
+        Request request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new NoSuchElementException("Request with id " + requestId + " not found"));
+
+        if (request.getStatus() != Status.PENDING) {
+            throw new IllegalStateException("Only pending requests can be deleted");
+        }
+
+        boolean isAdmin = actorRole == Role.ADMIN;
+        boolean isOwner = request.getRequestedByUserId() != null && request.getRequestedByUserId().equals(actorUserId);
+
+        if (!isAdmin && !isOwner) {
+            throw new IllegalArgumentException("Only the request owner or an admin can delete this request");
+        }
+
+        requestRepository.delete(request);
+        return "Request(" + requestId + ") deleted successfully";
     }
 
     public OfficerProfile registerProfile(Long userId, RegisterOfficerRequest request) {
@@ -295,5 +315,23 @@ public class OfficerService {
         return String.join(" ", Stream.of(user.getPerson().getFirstName(), user.getPerson().getMiddleName(), user.getPerson().getLastName())
                 .filter(value -> value != null && !value.isBlank())
                 .toList());
+    }
+
+    private Long requireLongPayloadField(Map<String, Object> payload, String fieldName, RequestType requestType) {
+        Object value = payload.get(fieldName);
+        if (!(value instanceof Number number)) {
+            throw new IllegalArgumentException(requestType + " payload must include numeric " + fieldName);
+        }
+
+        return number.longValue();
+    }
+
+    private String requireStringPayloadField(Map<String, Object> payload, String fieldName, RequestType requestType) {
+        Object value = payload.get(fieldName);
+        if (!(value instanceof String stringValue) || stringValue.isBlank()) {
+            throw new IllegalArgumentException(requestType + " payload must include " + fieldName);
+        }
+
+        return stringValue;
     }
 }

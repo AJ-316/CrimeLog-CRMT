@@ -1,8 +1,8 @@
-import {useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {Link, useOutletContext} from "react-router-dom";
 import type {PersonCriminalHistoryDto} from "../api/dtos/person-history.ts";
 import type {PersonOptionDto} from "../api/dtos/reference.ts";
-import {getPersonHistory} from "../api/services/person-services.ts";
+import {deletePerson, getPersonHistory} from "../api/services/person-services.ts";
 import {getPeople} from "../api/services/reference-services.ts";
 import type {AppOutletContext} from "../components/app/AppShell.tsx";
 import {
@@ -11,65 +11,72 @@ import {
     PageHeader,
     SectionCard,
     StatusBadge,
+    dangerButtonClassName as destructiveButtonClassName,
     inputClassName,
+    primaryButtonClassName,
+    secondaryButtonClassName,
     tableCellClassName,
     tableClassName,
     tableContainerClassName,
-    tableHeadCellClassName,
-    primaryButtonClassName
+    tableHeadCellClassName
 } from "../components/app/WorkspaceUi.tsx";
 import {formatDate, formatEnumLabel, formatParticipantRole} from "../utils/display.ts";
 
+type SortKey = "name" | "nationalId" | "total" | "active" | "closed";
+
+interface PersonDirectoryRow {
+    person: PersonOptionDto;
+    history: PersonCriminalHistoryDto;
+}
+
 export default function PersonHistoryPage() {
     const {role} = useOutletContext<AppOutletContext>();
-    const [people, setPeople] = useState<PersonOptionDto[]>([]);
-    const [selectedPersonId, setSelectedPersonId] = useState<number>(0);
+    const [rows, setRows] = useState<PersonDirectoryRow[]>([]);
+    const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
     const [suspectOnly, setSuspectOnly] = useState(false);
-    const [history, setHistory] = useState<PersonCriminalHistoryDto | null>(null);
-    const [isLoadingPeople, setIsLoadingPeople] = useState(true);
-    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortKey, setSortKey] = useState<SortKey>("name");
+    const [sortAscending, setSortAscending] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [error, setError] = useState("");
 
-    useEffect(() => {
-        const loadPeople = async () => {
-            try {
-                setIsLoadingPeople(true);
-                setError("");
-                const result = await getPeople();
-                setPeople(result);
-                if (result.length > 0) {
-                    setSelectedPersonId(result[0].personId);
+    const canManagePeople = role === "ADMIN" || role === "OFFICER";
+
+    const loadDirectory = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setError("");
+
+            const people = await getPeople();
+            const historyResponses = await Promise.all(people.map(async (person) => ({
+                person,
+                history: await getPersonHistory(person.personId, suspectOnly)
+            })));
+
+            setRows(historyResponses);
+            if (historyResponses.length === 0) {
+                setSelectedPersonId(null);
+                return;
+            }
+
+            setSelectedPersonId((currentValue) => {
+                if (currentValue && historyResponses.some((row) => row.person.personId === currentValue)) {
+                    return currentValue;
                 }
-            } catch (loadError) {
-                setError(loadError instanceof Error ? loadError.message : "Failed to load people");
-            } finally {
-                setIsLoadingPeople(false);
-            }
-        };
 
-        void loadPeople();
-    }, []);
+                return null;
+            });
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : "Failed to load people directory");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [role, suspectOnly]);
 
     useEffect(() => {
-        if (!selectedPersonId) {
-            setHistory(null);
-            return;
-        }
-
-        const loadHistory = async () => {
-            try {
-                setIsLoadingHistory(true);
-                setError("");
-                setHistory(await getPersonHistory(selectedPersonId, suspectOnly));
-            } catch (loadError) {
-                setError(loadError instanceof Error ? loadError.message : "Failed to load history");
-            } finally {
-                setIsLoadingHistory(false);
-            }
-        };
-
-        void loadHistory();
-    }, [selectedPersonId, suspectOnly]);
+        void loadDirectory();
+    }, [loadDirectory]);
 
     const description = useMemo(() => {
         if (suspectOnly) {
@@ -79,78 +86,228 @@ export default function PersonHistoryPage() {
         return "Showing every involvement role across cases, including victim, witness, and accused links.";
     }, [suspectOnly]);
 
+    const selectedRow = useMemo(
+        () => rows.find((row) => row.person.personId === selectedPersonId) ?? null,
+        [rows, selectedPersonId]
+    );
+
+    const filteredRows = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+
+        const matchingRows = rows.filter((row) => {
+            if (!query) {
+                return true;
+            }
+
+            const name = row.person.fullName.toLowerCase();
+            const nationalId = row.person.nationalId.toLowerCase();
+            return name.includes(query) || nationalId.includes(query);
+        });
+
+        const sortedRows = [...matchingRows].sort((a, b) => {
+            const factor = sortAscending ? 1 : -1;
+            switch (sortKey) {
+                case "name":
+                    return a.person.fullName.localeCompare(b.person.fullName) * factor;
+                case "nationalId":
+                    return a.person.nationalId.localeCompare(b.person.nationalId) * factor;
+                case "total":
+                    return (a.history.totalInvolvements - b.history.totalInvolvements) * factor;
+                case "active":
+                    return (a.history.activeCases - b.history.activeCases) * factor;
+                case "closed":
+                    return (a.history.closedCases - b.history.closedCases) * factor;
+                default:
+                    return 0;
+            }
+        });
+
+        return sortedRows;
+    }, [rows, searchQuery, sortKey, sortAscending]);
+
+    const handleDelete = async (personId: number, fullName: string) => {
+        if (!canManagePeople) {
+            return;
+        }
+
+        const confirmed = window.confirm(`Delete ${fullName}? This cannot be undone.`);
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            setError("");
+            await deletePerson(personId);
+            await loadDirectory();
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Failed to delete person");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <section className="space-y-6">
             <PageHeader
                 actions={role === "ADMIN" || role === "OFFICER" ? <Link className={primaryButtonClassName} to="/app/persons/new">Add person</Link> : undefined}
-                description="Track criminal records by person, switch between all involvements and suspect-only history, and inspect linked cases."
+                description="Browse every person in one list, search and sort records, toggle suspect-only history mode, and update person profiles."
                 eyebrow={role === "LAWYER" ? "Client history" : "Criminal records"}
-                title="Person history"
+                title="People directory"
             />
 
-            <SectionCard description="Choose a person and scope to load their case history profile." title="History filters">
-                {isLoadingPeople ? <LoadingBlock label="Loading people" /> : null}
-                {!isLoadingPeople ? (
-                    <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-                        <label className="block text-sm font-medium text-slate-700">
-                            Person
-                            <select
-                                className={inputClassName}
-                                onChange={(event) => setSelectedPersonId(Number(event.target.value))}
-                                value={selectedPersonId || ""}
-                            >
-                                {people.length === 0 ? <option value="">No people available</option> : null}
-                                {people.map((person) => (
-                                    <option key={person.personId} value={person.personId}>
-                                        {person.fullName} ({person.nationalId})
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-
-                        <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-                            <input
-                                checked={suspectOnly}
-                                className="h-4 w-4 rounded border-slate-300 text-blue-600"
-                                onChange={(event) => setSuspectOnly(event.target.checked)}
-                                type="checkbox"
-                            />
-                            Suspect-only mode
-                        </label>
-                    </div>
-                ) : null}
+            <SectionCard description="Search, sort, and switch history mode for all people in the registry." title="People filters">
+                <div className="grid gap-4 md:grid-cols-4">
+                    <label className="block text-sm font-medium text-slate-700 md:col-span-2">
+                        Search
+                        <input
+                            className={inputClassName}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            placeholder="Search by name or national ID"
+                            value={searchQuery}
+                        />
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                        Sort by
+                        <select className={inputClassName} onChange={(event) => setSortKey(event.target.value as SortKey)} value={sortKey}>
+                            <option value="name">Name</option>
+                            <option value="nationalId">National ID</option>
+                            <option value="total">Total cases</option>
+                            <option value="active">Active cases</option>
+                            <option value="closed">Closed cases</option>
+                        </select>
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                        Direction
+                        <select className={inputClassName} onChange={(event) => setSortAscending(event.target.value === "asc")} value={sortAscending ? "asc" : "desc"}>
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </label>
+                </div>
+                <label className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                    <input
+                        checked={suspectOnly}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                        onChange={(event) => setSuspectOnly(event.target.checked)}
+                        type="checkbox"
+                    />
+                    Suspect-only mode
+                </label>
             </SectionCard>
 
-            {error ? <EmptyState description={error} title="Unable to load person history" /> : null}
-            {isLoadingHistory ? <LoadingBlock label="Loading person history" /> : null}
+            {error ? <EmptyState description={error} title="Unable to load people directory" /> : null}
+            {isLoading ? <LoadingBlock label="Loading people directory" /> : null}
 
-            {!isLoadingHistory && history ? (
-                <>
-                    <SectionCard description={description} title={history.fullName}>
-                        <div className="grid gap-4 md:grid-cols-4">
-                            <div className="rounded-2xl bg-slate-50 p-4">
-                                <p className="text-sm font-medium text-slate-500">National ID</p>
-                                <p className="mt-2 text-base font-semibold text-slate-900">{history.nationalId}</p>
-                            </div>
-                            <div className="rounded-2xl bg-slate-50 p-4">
-                                <p className="text-sm font-medium text-slate-500">Total linked cases</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-900">{history.totalInvolvements}</p>
-                            </div>
-                            <div className="rounded-2xl bg-slate-50 p-4">
-                                <p className="text-sm font-medium text-slate-500">Active</p>
-                                <p className="mt-2 text-xl font-semibold text-blue-700">{history.activeCases}</p>
-                            </div>
-                            <div className="rounded-2xl bg-slate-50 p-4">
-                                <p className="text-sm font-medium text-slate-500">Closed</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-700">{history.closedCases}</p>
-                            </div>
+            {!isLoading ? (
+                <SectionCard description={description} title="People list">
+                    {filteredRows.length === 0 ? (
+                        <EmptyState description="No matching people found for the current filters." title="No results" />
+                    ) : (
+                        <div className={tableContainerClassName}>
+                            <table className={tableClassName}>
+                                <thead>
+                                    <tr>
+                                        <th className={tableHeadCellClassName}>Person</th>
+                                        <th className={tableHeadCellClassName}>National ID</th>
+                                        <th className={tableHeadCellClassName}>Total</th>
+                                        <th className={tableHeadCellClassName}>Active</th>
+                                        <th className={tableHeadCellClassName}>Closed</th>
+                                        <th className={tableHeadCellClassName}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 bg-white">
+                                    {filteredRows.map((row) => (
+                                        <tr
+                                            className={`${row.person.personId === selectedPersonId ? "bg-blue-50/60" : ""} cursor-pointer transition hover:bg-blue-50/40`}
+                                            key={row.person.personId}
+                                            onClick={() => setSelectedPersonId(row.person.personId)}
+                                        >
+                                            <td className={tableCellClassName}>{row.person.fullName}</td>
+                                            <td className={tableCellClassName}>{row.person.nationalId}</td>
+                                            <td className={tableCellClassName}>{row.history.totalInvolvements}</td>
+                                            <td className={tableCellClassName}>{row.history.activeCases}</td>
+                                            <td className={tableCellClassName}>{row.history.closedCases}</td>
+                                            <td className={tableCellClassName}>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Link
+                                                        className={secondaryButtonClassName}
+                                                        to={`/app/people/${row.person.personId}${suspectOnly ? "?mode=suspect" : ""}`}
+                                                    >
+                                                        View history
+                                                    </Link>
+                                                    {canManagePeople ? (
+                                                        <>
+                                                            <Link
+                                                                className={primaryButtonClassName}
+                                                                to={`/app/people/${row.person.personId}/edit${suspectOnly ? "?mode=suspect" : ""}`}
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                            <button
+                                                                className={destructiveButtonClassName}
+                                                                disabled={isDeleting}
+                                                                onClick={() => void handleDelete(row.person.personId, row.person.fullName)}
+                                                                type="button"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </>
+                                                    ) : null}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    </SectionCard>
+                    )}
+                </SectionCard>
+            ) : null}
 
-                    <SectionCard description="Case-level history for the selected person." title="Case involvements">
-                        {history.involvements.length === 0 ? (
-                            <EmptyState description="No case records are linked for this person in the selected mode." title="No involvements found" />
-                        ) : (
+            {!isLoading && selectedRow ? (
+                <>
+                    {selectedRow.history.totalInvolvements === 0 ? (
+                        <SectionCard className="scroll-mt-24" description="No case history is linked to this person yet." title={selectedRow.history.fullName}>
+                            <EmptyState description="This person does not have any linked FIR or case records in the database right now." title="No history available" />
+                        </SectionCard>
+                    ) : (
+                        <>
+                            <SectionCard className="scroll-mt-24" description={description} title={selectedRow.history.fullName}>
+                                <div className="grid gap-4 md:grid-cols-4">
+                                    <div className="rounded-2xl bg-slate-50 p-4">
+                                        <p className="text-sm font-medium text-slate-500">National ID</p>
+                                        <p className="mt-2 text-base font-semibold text-slate-900">{selectedRow.history.nationalId}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-slate-50 p-4">
+                                        <p className="text-sm font-medium text-slate-500">Total linked cases</p>
+                                        <p className="mt-2 text-xl font-semibold text-slate-900">{selectedRow.history.totalInvolvements}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-slate-50 p-4">
+                                        <p className="text-sm font-medium text-slate-500">Active</p>
+                                        <p className="mt-2 text-xl font-semibold text-blue-700">{selectedRow.history.activeCases}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-slate-50 p-4">
+                                        <p className="text-sm font-medium text-slate-500">Closed</p>
+                                        <p className="mt-2 text-xl font-semibold text-slate-700">{selectedRow.history.closedCases}</p>
+                                    </div>
+                                </div>
+                                {canManagePeople ? (
+                                    <div className="mt-5 flex flex-wrap gap-3">
+                                        <Link className={primaryButtonClassName} to={`/app/people/${selectedRow.person.personId}/edit${suspectOnly ? "?mode=suspect" : ""}`}>
+                                            Edit profile
+                                        </Link>
+                                        <button className={destructiveButtonClassName} disabled={isDeleting} onClick={() => void handleDelete(selectedRow.person.personId, selectedRow.person.fullName)} type="button">
+                                            {isDeleting ? "Deleting" : "Delete person"}
+                                        </button>
+                                    </div>
+                                ) : null}
+                            </SectionCard>
+
+                            <SectionCard description="Case-level history for the selected person." title="Case involvements">
+                                {selectedRow.history.involvements.length === 0 ? (
+                                    <EmptyState description="This person has a history record, but no linked case entries are present in the selected mode." title="No involvements found" />
+                                ) : (
                             <div className={tableContainerClassName}>
                                 <table className={tableClassName}>
                                     <thead>
@@ -161,10 +318,11 @@ export default function PersonHistoryPage() {
                                             <th className={tableHeadCellClassName}>Investigating unit</th>
                                             <th className={tableHeadCellClassName}>FIR</th>
                                             <th className={tableHeadCellClassName}>Linked on</th>
+                                            <th className={tableHeadCellClassName}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-200 bg-white">
-                                        {history.involvements.map((involvement) => (
+                                        {selectedRow.history.involvements.map((involvement) => (
                                             <tr key={`${involvement.caseId}-${involvement.linkedOn ?? involvement.involvementType}`}>
                                                 <td className={tableCellClassName}>{involvement.caseNumber}</td>
                                                 <td className={tableCellClassName}>{formatParticipantRole(involvement.involvementType)}</td>
@@ -177,14 +335,23 @@ export default function PersonHistoryPage() {
                                                 <td className={tableCellClassName}>{involvement.investigatingUnitName ?? "Not assigned"}</td>
                                                 <td className={tableCellClassName}>{involvement.firNumber ?? "Not linked"}</td>
                                                 <td className={tableCellClassName}>{formatDate(involvement.linkedOn)}</td>
+                                                <td className={tableCellClassName}>
+                                                    <Link className={secondaryButtonClassName} to={`/app/cases/${involvement.caseId}`}>Open case</Link>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-                        )}
-                    </SectionCard>
+                                )}
+                            </SectionCard>
+                        </>
+                    )}
                 </>
+            ) : !isLoading ? (
+                <SectionCard description="Click any person row to preview the detailed history panel." title="Select a person">
+                    <EmptyState description="No person is selected yet. Choose a row in the people list to view the history details here." title="Nothing selected" />
+                </SectionCard>
             ) : null}
         </section>
     );

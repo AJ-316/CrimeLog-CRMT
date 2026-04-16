@@ -1,10 +1,11 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
 import {useOutletContext} from "react-router-dom";
 import type {AlertDto} from "../api/dtos/alert.ts";
-import {createAlert, getAlerts} from "../api/services/alert-services.ts";
+import {createAlert, deleteAlert, getAlerts, updateAlert} from "../api/services/alert-services.ts";
 import {AlertSeverityOptions, type AlertSeverity} from "../api/types.ts";
 import type {AppOutletContext} from "../components/app/AppShell.tsx";
 import {
+    dangerButtonClassName,
     EmptyState,
     LoadingBlock,
     PageHeader,
@@ -15,8 +16,10 @@ import {
     tableClassName,
     tableContainerClassName,
     tableHeadCellClassName,
-    textareaClassName
+    textareaClassName,
+    secondaryButtonClassName
 } from "../components/app/WorkspaceUi.tsx";
+import {getSessionUserId} from "../utils/auth-session.ts";
 import {formatDateTime, formatEnumLabel} from "../utils/display.ts";
 
 const severityTone: Record<AlertSeverity, string> = {
@@ -28,14 +31,20 @@ const severityTone: Record<AlertSeverity, string> = {
 
 export default function AlertsPage() {
     const {role} = useOutletContext<AppOutletContext>();
+    const currentUserId = getSessionUserId();
     const [alerts, setAlerts] = useState<AlertDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [activeAlertId, setActiveAlertId] = useState<number | null>(null);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [severity, setSeverity] = useState<AlertSeverity>("MEDIUM");
+    const [editingAlertId, setEditingAlertId] = useState<number | null>(null);
+    const [editMessage, setEditMessage] = useState("");
+    const [editSeverity, setEditSeverity] = useState<AlertSeverity>("MEDIUM");
 
     const canCreate = role === "ADMIN" || role === "OFFICER";
+    const canManage = role === "ADMIN" || role === "OFFICER";
 
     const sortedAlerts = useMemo(() => [...alerts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [alerts]);
 
@@ -75,6 +84,55 @@ export default function AlertsPage() {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const beginEdit = (alert: AlertDto) => {
+        setEditingAlertId(alert.alertId);
+        setEditMessage(alert.message);
+        setEditSeverity(alert.severity);
+    };
+
+    const handleUpdateAlert = async (alertId: number) => {
+        if (!editMessage.trim()) {
+            setError("Alert message is required.");
+            return;
+        }
+
+        try {
+            setActiveAlertId(alertId);
+            setError("");
+            await updateAlert(alertId, {message: editMessage.trim(), severity: editSeverity});
+            setEditingAlertId(null);
+            await loadAlerts();
+        } catch (updateError) {
+            setError(updateError instanceof Error ? updateError.message : "Failed to update alert");
+        } finally {
+            setActiveAlertId(null);
+        }
+    };
+
+    const handleDeleteAlert = async (alertId: number) => {
+        try {
+            setActiveAlertId(alertId);
+            setError("");
+            await deleteAlert(alertId);
+            if (editingAlertId === alertId) {
+                setEditingAlertId(null);
+            }
+            await loadAlerts();
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Failed to delete alert");
+        } finally {
+            setActiveAlertId(null);
+        }
+    };
+
+    const canManageAlert = (alert: AlertDto): boolean => {
+        if (!canManage) {
+            return false;
+        }
+
+        return role === "ADMIN" || (currentUserId !== null && alert.createdByUserId === currentUserId);
     };
 
     return (
@@ -134,15 +192,57 @@ export default function AlertsPage() {
                                     <th className={tableHeadCellClassName}>Severity</th>
                                     <th className={tableHeadCellClassName}>Published by</th>
                                     <th className={tableHeadCellClassName}>Published at</th>
+                                    {canManage ? <th className={tableHeadCellClassName}>Actions</th> : null}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 bg-white">
                                 {sortedAlerts.map((alert) => (
                                     <tr key={alert.alertId}>
-                                        <td className={tableCellClassName}>{alert.message}</td>
-                                        <td className={`${tableCellClassName} font-semibold ${severityTone[alert.severity]}`}>{formatEnumLabel(alert.severity)}</td>
+                                        <td className={tableCellClassName}>
+                                            {editingAlertId === alert.alertId ? (
+                                                <textarea className={textareaClassName} onChange={(event) => setEditMessage(event.target.value)} value={editMessage} />
+                                            ) : alert.message}
+                                        </td>
+                                        <td className={`${tableCellClassName} font-semibold ${severityTone[alert.severity]}`}>
+                                            {editingAlertId === alert.alertId ? (
+                                                <select className={inputClassName} onChange={(event) => setEditSeverity(event.target.value as AlertSeverity)} value={editSeverity}>
+                                                    {AlertSeverityOptions.map((option) => (
+                                                        <option key={option} value={option}>{formatEnumLabel(option)}</option>
+                                                    ))}
+                                                </select>
+                                            ) : formatEnumLabel(alert.severity)}
+                                        </td>
                                         <td className={tableCellClassName}>{formatEnumLabel(alert.createdByRole)}</td>
                                         <td className={tableCellClassName}>{formatDateTime(alert.createdAt)}</td>
+                                        {canManage ? (
+                                            <td className={tableCellClassName}>
+                                                {canManageAlert(alert) ? (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {editingAlertId === alert.alertId ? (
+                                                            <>
+                                                                <button className={secondaryButtonClassName} disabled={activeAlertId === alert.alertId} onClick={() => void handleUpdateAlert(alert.alertId)} type="button">
+                                                                    Save
+                                                                </button>
+                                                                <button className={dangerButtonClassName} disabled={activeAlertId === alert.alertId} onClick={() => setEditingAlertId(null)} type="button">
+                                                                    Cancel
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <button className={secondaryButtonClassName} disabled={activeAlertId === alert.alertId} onClick={() => beginEdit(alert)} type="button">
+                                                                    Edit
+                                                                </button>
+                                                                <button className={dangerButtonClassName} disabled={activeAlertId === alert.alertId} onClick={() => void handleDeleteAlert(alert.alertId)} type="button">
+                                                                    Delete
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-slate-500">Creator or admin only</span>
+                                                )}
+                                            </td>
+                                        ) : null}
                                     </tr>
                                 ))}
                             </tbody>

@@ -13,5 +13,7 @@ public interface CasePersonRepository extends JpaRepository<CasePerson, Long> {
 
     List<CasePerson> findByPerson_PersonIdAndCasePersonTypeOrderByAddedOnDesc(Long personId, CasePersonType casePersonType);
 
+    boolean existsByPerson_PersonId(Long personId);
+
     boolean existsByCaseEntity_CaseIdAndPerson_PersonIdAndCasePersonType(Long caseId, Long personId, CasePersonType casePersonType);
 }

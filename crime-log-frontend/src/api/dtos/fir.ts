@@ -40,12 +40,12 @@ export interface FirRegisterRequest {
     accusedFirstName: string;
     accusedMiddleName: string;
     accusedLastName: string;
-    accusedContact: string;
+    accusedContact: string | null;
     accusedDescription: string;
-    accusedAddress: AddressDto;
+    accusedAddress: AddressDto | null;
     initialInvestigatingUnitId: number;
     officerIdCreatedBy: number;
-    incidentPlace: AddressDto;
+    incidentPlace: AddressDto | null;
     incidentDateTime: string;
     incidentDescription: string;
 }

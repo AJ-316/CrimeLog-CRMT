@@ -37,7 +37,13 @@ type CheckboxFieldProps = SharedFieldProps & {
     onChange: (checked: boolean) => void;
 };
 
-type RegisterFieldProps = InputFieldProps | SelectFieldProps | CheckboxFieldProps;
+type FileFieldProps = SharedFieldProps & {
+    kind: "file";
+    accept?: string;
+    onChange: (file: File | null) => void;
+};
+
+type RegisterFieldProps = InputFieldProps | SelectFieldProps | CheckboxFieldProps | FileFieldProps;
 
 const inputClassName = "mt-2 w-full rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300 focus:bg-white/10 focus:ring-4 focus:ring-cyan-400/10";
 const selectClassName = `${inputClassName} appearance-none pr-12`;
@@ -66,6 +72,36 @@ export default function RegisterField(props: RegisterFieldProps) {
                     </span>
                 </label>
                 {props.error ? <p className="mt-2 text-sm text-red-200">{props.error}</p> : null}
+            </div>
+        );
+    }
+
+    if (props.kind === "file") {
+        return (
+            <div>
+                <label className="block text-left text-sm font-medium text-slate-200" htmlFor={props.id}>
+                    {props.label}
+                    {props.required ? <span className="ml-1 text-red-300">*</span> : null}
+                </label>
+                <input
+                    aria-describedby={helperTextId}
+                    aria-invalid={Boolean(props.error)}
+                    className={inputClassName}
+                    accept={props.accept ?? "image/*"}
+                    id={props.id}
+                    onChange={(event) => props.onChange(event.target.files?.[0] ?? null)}
+                    type="file"
+                />
+                {props.description ? (
+                    <p className="mt-2 text-sm text-slate-400" id={descriptionId}>
+                        {props.description}
+                    </p>
+                ) : null}
+                {props.error ? (
+                    <p className="mt-2 text-sm text-red-200" id={errorId}>
+                        {props.error}
+                    </p>
+                ) : null}
             </div>
         );
     }

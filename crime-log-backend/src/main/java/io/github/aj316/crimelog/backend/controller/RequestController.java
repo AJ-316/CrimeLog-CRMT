@@ -45,5 +45,25 @@ public class RequestController {
                 "Request updated successfully"
         ));
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{requestId}")
+    public ResponseEntity<ApiResponse<String>> deleteRequest(@PathVariable Long requestId) {
+        Long actorUserId = authenticatedUserService.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(
+                officerService.deleteRequest(actorUserId, authenticatedUserService.getCurrentUserRole(), requestId),
+                "Request deleted successfully"
+        ));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{requestId}/delete")
+    public ResponseEntity<ApiResponse<String>> deleteRequestViaPost(@PathVariable Long requestId) {
+        Long actorUserId = authenticatedUserService.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(
+                officerService.deleteRequest(actorUserId, authenticatedUserService.getCurrentUserRole(), requestId),
+                "Request deleted successfully"
+        ));
+    }
 }
 

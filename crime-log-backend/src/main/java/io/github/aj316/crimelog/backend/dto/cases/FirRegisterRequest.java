@@ -30,17 +30,17 @@ public record FirRegisterRequest(
     @Override
     public FIR mapToEntity() {
         FIR fir = new FIR();
-        fir.setFirNumber(firNumber);
+        fir.setFirNumber(firNumber != null ? firNumber.trim() : null);
         fir.setFirType(firType);
         fir.setRegistrationDateTime(registrationDateTime);
-        fir.setAccusedFirstName(accusedFirstName);
-        fir.setAccusedMiddleName(accusedMiddleName);
-        fir.setAccusedLastName(accusedLastName);
-        fir.setAccusedContact(accusedContact);
-        fir.setAccusedAddress(accusedAddress.mapToEntity());
-        fir.setIncidentPlace(incidentPlace.mapToEntity());
+        fir.setAccusedFirstName(accusedFirstName != null ? accusedFirstName.trim() : null);
+        fir.setAccusedMiddleName(accusedMiddleName != null && !accusedMiddleName.isBlank() ? accusedMiddleName.trim() : null);
+        fir.setAccusedLastName(accusedLastName != null ? accusedLastName.trim() : null);
+        fir.setAccusedContact(accusedContact != null && !accusedContact.isBlank() ? accusedContact.trim() : null);
+        fir.setAccusedAddress(accusedAddress != null ? accusedAddress.mapToEntity() : null);
+        fir.setIncidentPlace(incidentPlace != null ? incidentPlace.mapToEntity() : null);
         fir.setIncidentDateTime(incidentDateTime);
-        fir.setIncidentDescription(incidentDescription);
+        fir.setIncidentDescription(incidentDescription != null && !incidentDescription.isBlank() ? incidentDescription.trim() : null);
         return fir;
     }
 }

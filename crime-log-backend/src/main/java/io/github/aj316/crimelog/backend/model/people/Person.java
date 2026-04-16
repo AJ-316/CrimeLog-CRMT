@@ -36,6 +36,13 @@ public class Person {
     @Column(length = 255, nullable = false)
     private String profilePhotoPath = "images/profiles/default-profile.png";
 
+        @Lob
+        @Basic(fetch = FetchType.LAZY)
+        private byte[] profilePhotoData;
+
+        @Column(length = 100)
+        private String profilePhotoContentType;
+
     @Column(nullable = false)
     private LocalDate dateOfBirth;
 

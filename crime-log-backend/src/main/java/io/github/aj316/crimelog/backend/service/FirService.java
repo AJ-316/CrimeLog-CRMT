@@ -9,6 +9,7 @@ import io.github.aj316.crimelog.backend.model.cases.FIR;
 import io.github.aj316.crimelog.backend.model.institutes.DepartmentUnit;
 import io.github.aj316.crimelog.backend.model.people.users.OfficerProfile;
 import io.github.aj316.crimelog.backend.model.types.FIR_Type;
+import io.github.aj316.crimelog.backend.model.types.UnitType;
 import io.github.aj316.crimelog.backend.repository.CaseRepository;
 import io.github.aj316.crimelog.backend.repository.DepartmentUnitRepository;
 import io.github.aj316.crimelog.backend.repository.FirRepository;
@@ -97,10 +98,16 @@ public class FirService {
         if (originDepartmentUnit == null || !departmentUnitRepository.existsById(originDepartmentUnit.getId()))
             throw new NoSuchElementException("Origin department unit does not exist");
 
+        if (originDepartmentUnit.getUnitType() != UnitType.POLICE_STATION)
+            throw new IllegalStateException("FIR can only be registered by officers posted to a police station");
+
         Optional<DepartmentUnit> initialInvestigatingUnitId = departmentUnitRepository.findById(firRegisterRequest.initialInvestigatingUnitId());
 
         if (initialInvestigatingUnitId.isEmpty())
             throw new NoSuchElementException("Initial investigating unit does not exist");
+
+        if (initialInvestigatingUnitId.get().getUnitType() != UnitType.POLICE_STATION)
+            throw new IllegalStateException("Initial investigating unit must be a police station");
 
         fir.setOriginUnit(originDepartmentUnit);
         fir.setInitialInvestigatingUnit(initialInvestigatingUnitId.get());

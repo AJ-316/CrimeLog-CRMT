@@ -1,4 +1,4 @@
-import {useEffect, useMemo} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {NavLink, Outlet, useLocation, useNavigate} from "react-router-dom";
 import type {Role} from "../../api/types.ts";
 import {clearAuthSession, getSessionRole} from "../../utils/auth-session.ts";
@@ -20,6 +20,7 @@ const commonNav: readonly NavItem[] = [
 const roleNav: Record<Role, readonly NavItem[]> = {
     ADMIN: [
         {label: "Approvals", path: "/app/approvals", caption: "Review pending requests"},
+        {label: "Users", path: "/app/users", caption: "Platform accounts and status"},
         {label: "Reported cases", path: "/app/reports", caption: "Review private crime reports"},
         {label: "People", path: "/app/people", caption: "Criminal history lookup"},
         {label: "Add person", path: "/app/persons/new", caption: "Register a new person record"},
@@ -72,6 +73,7 @@ export default function AppShell() {
     const navigate = useNavigate();
     const location = useLocation();
     const role = getSessionRole();
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     const navItems = useMemo(() => [...commonNav, ...roleNav[role]], [role]);
     const allowedPrefixes = useMemo(() => navItems.map((item) => item.path), [navItems]);
@@ -84,15 +86,28 @@ export default function AppShell() {
         }
     }, [allowedPrefixes, location.pathname, navigate]);
 
+    useEffect(() => {
+        setIsMobileNavOpen(false);
+    }, [location.pathname]);
+
     const handleLogout = () => {
         clearAuthSession();
         navigate("/", {replace: true});
     };
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),linear-gradient(180deg,_#f8fbff_0%,_#eef4ff_48%,_#f8fafc_100%)] px-3 py-3 text-slate-900 sm:px-4 lg:px-5">
-            <div className="grid min-h-[calc(100vh-1.5rem)] w-full gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
-                <aside className="flex flex-col rounded-[28px] border border-white/60 bg-slate-950 text-white shadow-[0_25px_80px_rgba(15,23,42,0.45)] lg:sticky lg:top-3 lg:min-h-[calc(100vh-1.5rem)]">
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_28%),linear-gradient(180deg,_#f8fbff_0%,_#eef4ff_48%,_#f8fafc_100%)] px-2 py-2 text-slate-900 sm:px-4 sm:py-3 lg:px-5">
+            <div className="grid min-h-[calc(100vh-1rem)] w-full gap-2 lg:min-h-[calc(100vh-1.5rem)] lg:gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
+                {isMobileNavOpen ? (
+                    <button
+                        aria-label="Close navigation"
+                        className="fixed inset-0 z-40 bg-slate-950/45 lg:hidden"
+                        onClick={() => setIsMobileNavOpen(false)}
+                        type="button"
+                    />
+                ) : null}
+
+                <aside className={`fixed inset-y-2 left-2 z-50 flex w-[min(88vw,340px)] flex-col rounded-[28px] border border-white/60 bg-slate-950 text-white shadow-[0_25px_80px_rgba(15,23,42,0.45)] transition-transform duration-300 lg:static lg:inset-auto lg:z-auto lg:w-auto lg:translate-x-0 lg:shadow-[0_25px_80px_rgba(15,23,42,0.45)] lg:sticky lg:top-3 lg:min-h-[calc(100vh-1.5rem)] ${isMobileNavOpen ? "translate-x-0" : "-translate-x-[110%]"}`}>
                     <div className="border-b border-white/10 px-5 py-6 sm:px-6">
                         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">CrimeLog</p>
                         <h1 className="mt-3 text-2xl font-semibold tracking-tight">{roleWorkspaceTitle[role]}</h1>
@@ -138,14 +153,33 @@ export default function AppShell() {
                         >
                             Log out
                         </button>
+
+                        <button
+                            className="mt-3 w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/10 lg:hidden"
+                            onClick={() => setIsMobileNavOpen(false)}
+                            type="button"
+                        >
+                            Close menu
+                        </button>
                     </div>
                 </aside>
 
-                <main className="flex min-h-[calc(100vh-1.5rem)] min-w-0 flex-col rounded-[28px] border border-slate-200/80 bg-white/80 p-4 shadow-[0_25px_80px_rgba(15,23,42,0.12)] backdrop-blur sm:p-5 xl:p-7">
+                <main className="flex min-h-[calc(100vh-1rem)] min-w-0 flex-col rounded-[24px] border border-slate-200/80 bg-white/80 p-3 shadow-[0_25px_80px_rgba(15,23,42,0.12)] backdrop-blur sm:min-h-[calc(100vh-1.5rem)] sm:p-5 xl:p-7">
+                    <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 lg:hidden">
+                        <p className="text-sm font-semibold text-slate-900">CrimeLog menu</p>
+                        <button
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700"
+                            onClick={() => setIsMobileNavOpen(true)}
+                            type="button"
+                        >
+                            Open menu
+                        </button>
+                    </div>
+
                     <div className="mb-6 flex flex-col gap-4 rounded-[24px] border border-white bg-white/75 px-4 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">CrimeLog workspace</p>
-                            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{roleMainBannerTitle[role]}</h2>
+                            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{roleMainBannerTitle[role]}</h2>
                         </div>
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                             Signed in • Role context <span className="font-semibold text-slate-900">{role}</span>

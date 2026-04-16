@@ -4,6 +4,7 @@ import {GenderOptions} from "../../api/types.ts";
 import AddressSection from "./AddressSection.tsx";
 import RegisterField, {type SelectOption} from "./RegisterField.tsx";
 import {RegisterRoleOptions, type PersonAddressKey, type PersonScalarFieldKey, type RegisterRole} from "./register-types.ts";
+import {readImageFileAsBase64} from "../../utils/file-upload.ts";
 
 interface PersonSectionProps {
     person: PersonDto;
@@ -32,6 +33,18 @@ export default function PersonSection({
     onPersonChange,
     onAddressChange
 }: PersonSectionProps) {
+    const handleProfilePhotoChange = async (file: File | null) => {
+        if (!file) {
+            onPersonChange("profilePhotoData", null);
+            onPersonChange("profilePhotoContentType", null);
+            return;
+        }
+
+        const uploadedImage = await readImageFileAsBase64(file);
+        onPersonChange("profilePhotoData", uploadedImage.base64Data);
+        onPersonChange("profilePhotoContentType", uploadedImage.contentType);
+    };
+
     return (
         <div className="space-y-5">
             <div>
@@ -75,12 +88,13 @@ export default function PersonSection({
                     value={person.lastName}
                 />
                 <RegisterField
-                    description="Optional path or URL to the profile photo."
-                    error={errors["personDto.profilePhotoPath"]}
-                    id="profilePhotoPath"
-                    label="Profile photo path"
-                    onChange={(value) => onPersonChange("profilePhotoPath", value)}
-                    value={person.profilePhotoPath}
+                    accept="image/*"
+                    description="Upload a profile image. It will be stored with the person record in the database."
+                    error={errors["personDto.profilePhotoData"]}
+                    id="profilePhotoData"
+                    kind="file"
+                    label="Profile photo"
+                    onChange={handleProfilePhotoChange}
                 />
                 <RegisterField
                     error={errors["personDto.dateOfBirth"]}

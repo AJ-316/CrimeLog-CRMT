@@ -13,10 +13,13 @@ import CaseDetailsPage from "./pages/CaseDetailsPage.tsx";
 import CreateCasePage from "./pages/CreateCasePage.tsx";
 import RequestsPage from "./pages/RequestsPage.tsx";
 import ApprovalsPage from "./pages/ApprovalsPage.tsx";
+import UsersPage from "./pages/UsersPage.tsx";
 import LawyerClientsPage from "./pages/LawyerClientsPage.tsx";
 import LawyerHearingsPage from "./pages/LawyerHearingsPage.tsx";
 import AuditPage from "./pages/AuditPage.tsx";
 import PersonHistoryPage from "./pages/PersonHistoryPage.tsx";
+import PersonDetailsPage from "./pages/PersonDetailsPage.tsx";
+import PersonEditPage from "./pages/PersonEditPage.tsx";
 import CreatePersonPage from "./pages/CreatePersonPage.tsx";
 import AlertsPage from "./pages/AlertsPage.tsx";
 import CrimeReportsPage from "./pages/CrimeReportsPage.tsx";
@@ -41,9 +44,12 @@ function App() {
                         <Route path="cases/:caseId" element={<CaseDetailsPage />} />
                         <Route path="requests" element={<RequestsPage />} />
                         <Route path="approvals" element={<ApprovalsPage />} />
+                        <Route path="users" element={<UsersPage />} />
                         <Route path="clients" element={<LawyerClientsPage />} />
                         <Route path="hearings" element={<LawyerHearingsPage />} />
                         <Route path="people" element={<PersonHistoryPage />} />
+                        <Route path="people/:personId" element={<PersonDetailsPage />} />
+                        <Route path="people/:personId/edit" element={<PersonEditPage />} />
                         <Route path="persons/new" element={<CreatePersonPage />} />
                         <Route path="alerts" element={<AlertsPage />} />
                         <Route path="reports" element={<CrimeReportsPage />} />

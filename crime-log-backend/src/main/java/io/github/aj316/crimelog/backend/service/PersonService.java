@@ -36,6 +36,46 @@ public class PersonService {
         return personRepository.save(person);
     }
 
+        public Person updatePerson(Long personId, PersonDto personDto) {
+                Person person = personRepository.findById(personId)
+                                .orElseThrow(() -> new NoSuchElementException("Person not found"));
+
+                if (personRepository.existsByNationalIdAndPersonIdNot(personDto.nationalId(), personId)) {
+                        throw new PersonAlreadyExistsException();
+                }
+
+                Person updatedPerson = personDto.mapToEntity();
+                person.setNationalId(updatedPerson.getNationalId());
+                person.setFirstName(updatedPerson.getFirstName());
+                person.setMiddleName(updatedPerson.getMiddleName());
+                person.setLastName(updatedPerson.getLastName());
+                person.setProfilePhotoPath(updatedPerson.getProfilePhotoPath());
+                person.setProfilePhotoData(updatedPerson.getProfilePhotoData());
+                person.setProfilePhotoContentType(updatedPerson.getProfilePhotoContentType());
+                person.setDateOfBirth(updatedPerson.getDateOfBirth());
+                person.setGender(updatedPerson.getGender());
+                person.setNationalityCode(updatedPerson.getNationalityCode());
+                person.setBirthPlace(updatedPerson.getBirthPlace());
+                person.setPermanentAddress(updatedPerson.getPermanentAddress());
+                person.setCurrentAddress(updatedPerson.getCurrentAddress());
+                person.setContactPrimary(updatedPerson.getContactPrimary());
+                person.setContactSecondary(updatedPerson.getContactSecondary());
+
+                return personRepository.save(person);
+        }
+
+        public String deletePerson(Long personId) {
+                Person person = personRepository.findById(personId)
+                                .orElseThrow(() -> new NoSuchElementException("Person not found"));
+
+                if (casePersonRepository.existsByPerson_PersonId(personId)) {
+                        throw new IllegalStateException("Cannot delete person because linked case records exist");
+                }
+
+                personRepository.delete(person);
+                return "Person(" + personId + ") deleted successfully";
+        }
+
     public List<PersonOptionDto> getPeople() {
         return personRepository.findAllByOrderByFirstNameAscLastNameAsc().stream()
                 .map(person -> new PersonOptionDto(
@@ -45,6 +85,13 @@ public class PersonService {
                 ))
                 .toList();
     }
+
+        public PersonDto getPerson(Long personId) {
+                Person person = personRepository.findById(personId)
+                                .orElseThrow(() -> new NoSuchElementException("Person not found"));
+
+                return PersonDto.mapToDto(person);
+        }
 
     public PersonCriminalHistoryDto getCriminalHistory(Long personId) {
         Person person = personRepository.findById(personId)

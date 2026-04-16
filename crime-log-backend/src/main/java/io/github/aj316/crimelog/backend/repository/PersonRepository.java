@@ -8,5 +8,7 @@ import java.util.List;
 public interface PersonRepository extends JpaRepository<Person, Long> {
     boolean existsByNationalId(String s);
 
+    boolean existsByNationalIdAndPersonIdNot(String nationalId, Long personId);
+
     List<Person> findAllByOrderByFirstNameAscLastNameAsc();
 }

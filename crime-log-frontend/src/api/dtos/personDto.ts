@@ -7,6 +7,8 @@ export interface PersonDto {
     middleName: string,
     lastName: string,
     profilePhotoPath: string,
+    profilePhotoData: string | null,
+    profilePhotoContentType: string | null,
     dateOfBirth: string,
     gender: Gender,
     nationalityCode: string,

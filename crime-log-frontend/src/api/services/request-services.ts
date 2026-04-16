@@ -30,6 +30,15 @@ export const reviewRequest = async (requestId: number, review: RequestReviewDto)
     }
 };
 
+export const deleteRequest = async (requestId: number): Promise<string> => {
+    try {
+        const res = await api.post<ApiResponse<string>>(`/requests/${requestId}/delete`);
+        return requireApiData(res.data, "Failed to delete request");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to delete request"));
+    }
+};
+
 export const submitActionRequest = async (request: ActionRequestDto): Promise<string> => {
     try {
         const res = await api.post<ApiResponse<string>>("/action/request", request);

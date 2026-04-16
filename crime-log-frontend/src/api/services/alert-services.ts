@@ -20,3 +20,21 @@ export const createAlert = async (request: CreateAlertRequest): Promise<AlertDto
         throw new Error(getApiErrorMessage(error, "Failed to create alert"));
     }
 };
+
+export const updateAlert = async (alertId: number, request: CreateAlertRequest): Promise<AlertDto> => {
+    try {
+        const res = await api.patch<ApiResponse<AlertDto>>(`/alerts/${alertId}`, request);
+        return requireApiData(res.data, "Failed to update alert");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to update alert"));
+    }
+};
+
+export const deleteAlert = async (alertId: number): Promise<string> => {
+    try {
+        const res = await api.post<ApiResponse<string>>(`/alerts/${alertId}/delete`);
+        return requireApiData(res.data, "Failed to delete alert");
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to delete alert"));
+    }
+};

@@ -5,9 +5,10 @@ import type {AgencyOptionDto, DepartmentUnitOptionDto} from "../api/dtos/referen
 import type {ActionRequestDto, RequestSummaryDto} from "../api/dtos/request.ts";
 import {getCases} from "../api/services/case-services.ts";
 import {getAgencies, getDepartmentUnits} from "../api/services/reference-services.ts";
-import {getMyRequests, submitActionRequest} from "../api/services/request-services.ts";
+import {deleteRequest, getMyRequests, submitActionRequest} from "../api/services/request-services.ts";
 import {OfficerRequestTypeOptions, type RequestType} from "../api/types.ts";
 import {
+    dangerButtonClassName,
     EmptyState,
     LoadingBlock,
     PageHeader,
@@ -42,6 +43,7 @@ export default function RequestsPage() {
     const [requests, setRequests] = useState<RequestSummaryDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [activeRequestId, setActiveRequestId] = useState<number | null>(null);
     const [error, setError] = useState("");
     const [form, setForm] = useState<OfficerRequestForm>({
         requestType: "TRANSFER_UNIT",
@@ -130,6 +132,19 @@ export default function RequestsPage() {
         }
     };
 
+    const handleDeleteRequest = async (requestId: number) => {
+        try {
+            setActiveRequestId(requestId);
+            setError("");
+            await deleteRequest(requestId);
+            await loadPage();
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Failed to delete request");
+        } finally {
+            setActiveRequestId(null);
+        }
+    };
+
     return (
         <section className="space-y-6">
             <PageHeader
@@ -210,6 +225,7 @@ export default function RequestsPage() {
                                             <th className={tableHeadCellClassName}>Target</th>
                                             <th className={tableHeadCellClassName}>Status</th>
                                             <th className={tableHeadCellClassName}>Submitted</th>
+                                            <th className={tableHeadCellClassName}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-200 bg-white">
@@ -223,6 +239,17 @@ export default function RequestsPage() {
                                                 <td className={tableCellClassName}>{request.targetLabel ?? "Not applicable"}</td>
                                                 <td className={tableCellClassName}><StatusBadge label={formatEnumLabel(request.status)} tone={request.status === "APPROVED" ? "emerald" : request.status === "REJECTED" ? "rose" : "amber"} /></td>
                                                 <td className={tableCellClassName}>{formatDateTime(request.createdAt)}</td>
+                                                <td className={tableCellClassName}>
+                                                    {request.status === "PENDING" ? (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <button className={dangerButtonClassName} disabled={activeRequestId === request.requestId} onClick={() => void handleDeleteRequest(request.requestId)} type="button">
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-500">Finalized</span>
+                                                    )}
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
